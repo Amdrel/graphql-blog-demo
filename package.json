@@ -1,0 +1,31 @@
+{
+  "name": "graphql-blog-demo",
+  "version": "0.1.0",
+  "description": "GraphQL API and frontend for a blog.",
+  "main": "./dist/index.js",
+  "author": "Walter Kuppens",
+  "license": "MIT",
+  "scripts": {
+    "start": "node ./dist/index.js"
+  },
+  "devDependencies": {
+    "tslint": "^5.9.1",
+    "tslint-config-airbnb": "^5.8.0",
+    "typescript": "^2.8.1"
+  },
+  "dependencies": {
+    "@types/koa": "^2.0.45",
+    "@types/koa-router": "^7.0.27",
+    "@types/node": "^9.6.2",
+    "graphql": "^0.13.2",
+    "graphsiql": "^0.2.0",
+    "join-monster": "^2.0.16",
+    "knex": "^0.14.4",
+    "koa": "^2.5.0",
+    "koa-custom-graphiql": "^1.0.1",
+    "koa-graphql": "^0.7.5",
+    "koa-router": "^7.4.0",
+    "koa-static": "^4.0.2",
+    "pg": "^7.4.1"
+  }
+}

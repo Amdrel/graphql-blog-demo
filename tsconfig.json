@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "strict": true,
+    "outDir": "dist",
+    "module": "commonjs",
+    "sourceMap": true,
+    "allowSyntheticDefaultImports": false
+  }
+}
