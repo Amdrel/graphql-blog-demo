@@ -6,7 +6,7 @@ import * as koaConvert from 'koa-convert';
 import * as koaStatic from 'koa-static';
 import * as path from 'path';
 import graphiql from 'koa-custom-graphiql';
-import { getDeploymentEnv, DeploymentEnv } from './server/utils';
+import { Environment } from './server/utils';
 
 const app = new Koa();
 const router = new KoaRouter();
@@ -28,8 +28,9 @@ app.use(router.allowedMethods());
 // Serve the custom build of GraphiQL that shows SQL generation. This should be
 // disabled in a production environment to prevent unnessesary leaking of
 // information, but keep enabled in QA to reproduce issues.
-const env = getDeploymentEnv();
-if (env === DeploymentEnv.Development || env === DeploymentEnv.QA) {
+const env = Environment.getDeploymentEnv();
+if (env === Environment.DeploymentEnv.Development ||
+    env === Environment.DeploymentEnv.QA) {
   router.get('/graphql', graphiql({
     css: '/graphiql.css',
     js: '/graphiql.js',
