@@ -30,7 +30,7 @@ app.use(router.allowedMethods());
 // information, but keep enabled in QA to reproduce issues.
 const env = Environment.getDeploymentEnv();
 if (env === Environment.DeploymentEnv.Development ||
-    env === Environment.DeploymentEnv.QA) {
+    env === Environment.DeploymentEnv.Staging) {
   router.get('/graphql', graphiql({
     css: '/graphiql.css',
     js: '/graphiql.js',

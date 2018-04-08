@@ -5,7 +5,7 @@ export namespace Environment {
   export enum DeploymentEnv {
     Development = 'development',
     Testing = 'testing',
-    QA = 'qa',
+    Staging = 'staging',
     Production = 'production',
   }
 
@@ -29,8 +29,8 @@ export namespace Environment {
       return DeploymentEnv.Development;
     } else if (env === DeploymentEnv.Testing) {
       return DeploymentEnv.Testing;
-    } else if (env === DeploymentEnv.QA) {
-      return DeploymentEnv.QA;
+    } else if (env === DeploymentEnv.Staging) {
+      return DeploymentEnv.Staging;
     } else if (env === DeploymentEnv.Production) {
       return DeploymentEnv.Production;
     }
