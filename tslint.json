@@ -4,7 +4,8 @@
   "jsRules": {},
   "rules": {
     "eofline": true,
-    "import-name": false
+    "import-name": false,
+    "no-else-after-return": ["error", { "allowElseIf": true }]
   },
   "rulesDirectory": []
 }

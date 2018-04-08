@@ -14,12 +14,15 @@
     "typescript": "^2.8.1"
   },
   "dependencies": {
+    "@types/js-yaml": "^3.11.1",
+    "@types/knex": "^0.14.9",
     "@types/koa": "^2.0.45",
     "@types/koa-router": "^7.0.27",
     "@types/node": "^9.6.2",
     "graphql": "^0.13.2",
     "graphsiql": "^0.2.0",
     "join-monster": "^2.0.16",
+    "js-yaml": "^3.11.0",
     "knex": "^0.14.4",
     "koa": "^2.5.0",
     "koa-custom-graphiql": "^1.0.1",
