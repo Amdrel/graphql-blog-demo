@@ -14,6 +14,8 @@
     "typescript": "^2.8.1"
   },
   "dependencies": {
+    "@types/graphql": "^0.13.0",
+    "@types/hashids": "^1.0.30",
     "@types/js-yaml": "^3.11.1",
     "@types/knex": "^0.14.9",
     "@types/koa": "^2.0.45",
@@ -21,6 +23,7 @@
     "@types/node": "^9.6.2",
     "graphql": "^0.13.2",
     "graphsiql": "^0.2.0",
+    "hashids": "^1.1.4",
     "join-monster": "^2.0.16",
     "js-yaml": "^3.11.0",
     "knex": "^0.14.4",

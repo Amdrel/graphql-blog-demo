@@ -1,3 +1,8 @@
+import * as config from './config';
+import HashidsObject from 'hashids';
+
+const hashids = new HashidsObject(config.hashids.salt);
+
 export namespace Environment {
   /**
    * Enumeration of all supported deployment environments.
@@ -36,5 +41,15 @@ export namespace Environment {
     }
 
     throw new Error(`Unsupported NODE_ENV specified.`);
+  }
+}
+
+export namespace Hashids {
+  /**
+   * A singleton method to get a pre-built hashids object so we don't have to
+   * inject the config each time it's invoked.
+   */
+  export function getInstance(): HashidsObject {
+    return hashids;
   }
 }

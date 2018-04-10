@@ -5,6 +5,7 @@
     "outDir": "dist",
     "module": "commonjs",
     "sourceMap": true,
+    "noImplicitAny": true,
     "allowSyntheticDefaultImports": false
   }
 }

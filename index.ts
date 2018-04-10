@@ -1,24 +1,24 @@
 import * as Koa from 'koa';
 import * as KoaRouter from 'koa-router';
 import * as graphqlHTTP from 'koa-graphql';
-import * as knex from './server/database';
 import * as koaConvert from 'koa-convert';
 import * as koaStatic from 'koa-static';
 import * as path from 'path';
+import defaultSchema from './server/schema';
 import graphiql from 'koa-custom-graphiql';
 import { Environment } from './server/utils';
 
 const app = new Koa();
 const router = new KoaRouter();
 
-// router.post('/graphql', koaConvert(graphqlHTTP({
-//   schema: schemaBasic,
+router.post('/graphql', koaConvert(graphqlHTTP({
+  schema: defaultSchema,
 
-//   formatError: (e: Error) => {
-//     console.error(e);
-//     return e;
-//   },
-// })));
+  formatError: (e: Error) => {
+    console.error(e);
+    return e;
+  },
+})));
 
 router.redirect('/', '/graphql');
 
