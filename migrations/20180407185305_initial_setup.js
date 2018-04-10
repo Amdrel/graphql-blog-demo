@@ -39,7 +39,11 @@ exports.up = async function(knex, Promise) {
     table.text('body').notNull();
     table.timestamp('deleted_at');
     table.timestamps(true, true);
-    table.foreign('owner_id').references('id').inTable('users');
+
+    table.foreign('owner_id')
+      .references('id')
+      .inTable('users')
+      .withKeyName('posts_owner_id_fkey');
   });
 
   // Indexes for querying deleted / undeleted posts site-wide.
@@ -73,8 +77,15 @@ exports.up = async function(knex, Promise) {
     table.text('body').notNull();
     table.timestamp('deleted_at');
     table.timestamps(true, true);
-    table.foreign('owner_id').references('id').inTable('users');
-    table.foreign('post_id').references('id').inTable('posts');
+
+    table.foreign('owner_id')
+      .references('id')
+      .inTable('users')
+      .withKeyName('comments_owner_id_fkey');
+    table.foreign('post_id')
+      .references('id')
+      .inTable('posts')
+      .withKeyName('comments_post_id_fkey');
   });
 
   // Indexes for querying deleted / undeleted comments by a user.
