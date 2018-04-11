@@ -10,7 +10,7 @@ import Post from './post';
 import { Hashids } from '../utils';
 
 const user = new GraphQLObjectType({
-  description: 'a stem contract account',
+  description: '',
   name: 'User',
 
   fields: () => ({
