@@ -1,17 +1,3 @@
-// await knex.schema.createTable('posts', (table) => {
-//   table.increments('id').notNull();
-//   table.integer('owner_id').notNull();
-//   table.string('title').notNull();
-//   table.text('body').notNull();
-//   table.timestamp('deleted_at');
-//   table.timestamps(true, true);
-
-//   table.foreign('owner_id')
-//     .references('id')
-//     .inTable('users')
-//     .withKeyName('posts_owner_id_fkey');
-// });
-
 import {
   GraphQLObjectType,
   GraphQLList,
@@ -20,12 +6,17 @@ import {
   GraphQLFloat,
 } from 'graphql';
 
-import Comment from './comment';
+import * as config from '../config';
+import * as knex from '../database';
+import { Comment } from './comment';
 import { Hashids } from '../utils';
+import { User } from './user';
 
-const post = new GraphQLObjectType({
+const opts = {
   description: '',
   name: 'Post',
+  sqlTable: 'posts',
+  uniqueKey: 'id',
 
   fields: () => ({
     id: {
@@ -33,61 +24,70 @@ const post = new GraphQLObjectType({
       sqlColumn: 'id',
       type: GraphQLString,
 
-      resolve: user => Hashids.getInstance().encode(user.id),
+      resolve: (post: any) => Hashids.build(config).encode(post.id),
     },
-    email: {
-      sqlColumn: 'email',
+    ownerId: {
+      description: 'The owner ID hashid encoded.',
+      sqlColumn: 'owner_id',
       type: GraphQLString,
 
-      resolve: user => `${user.email}`,
+      resolve: (post: any) => Hashids.build(config).encode(post.id),
     },
-    fullName: {
-      description: `A user's full name.`,
-      sqlColumn: 'full_name',
+    title: {
+      description: `Title to the blog post.`,
+      sqlColumn: 'title',
       type: GraphQLString,
 
-      resolve: user => `${user.full_name}`,
+      resolve: (post: any) => `${post.title}`,
     },
-    firstName: {
-      description: `A user's first name.`,
-      sqlColumn: 'first_name',
+    body: {
+      description: `Body of the blog post.`,
+      sqlColumn: 'body',
       type: GraphQLString,
 
-      resolve: user => `${user.first_name}`,
+      resolve: (post: any) => `${post.body}`,
     },
-    lastName: {
-      description: `A user's last name.`,
-      sqlColumn: 'last_name',
-      type: GraphQLString,
-
-      resolve: user => `${user.last_name}`,
-    },
-    author: {
-      description: 'The user that created the post',
+    owner: {
+      description: 'The user that owns the post',
       type: User,
 
-      sqlJoin: (posts, users) => {
+      sqlJoin: (posts: string, users: string) => {
         return `${posts}.owner_id = ${users}.id`;
       },
     },
-    // posts: {
-    //   description: 'A list of posts the user has written.',
-    //   type: new GraphQLList(Post),
-    //   orderBy: 'id',
+    comments: {
+      description: 'A list of comments written about the post.',
+      type: new GraphQLList(Comment),
+      orderBy: 'id',
 
-    //   sqlJoin: (users: string, posts: string) => {
-    //     return `
-    //       ${users}.id = ${posts}.author_id AND
-    //       ${users}.deleted_at IS NULL
-    //     `;
-    //   },
-    // },
+      sqlBatch: {
+        thisKey: 'post_id',
+        parentKey: 'id',
+      },
+
+      where: (comments: string) => `${comments}.deleted_at IS NULL`,
+    },
+    commentCount: {
+      description: 'The number of comments on a post.',
+      type: GraphQLInt,
+
+      sqlExpr: (posts: string) => {
+        const query = knex.select(knex.count('*'))
+          .from('comments')
+          .where('post_id', '=', `${posts}.id`)
+          .whereNull('deleted_at');
+
+        // Join monster will add it's own SELECT token, so remove the one that
+        // knex generates with the query builder.
+        const strippedQuery = `${query}`.substring(7);
+
+        return `(${strippedQuery})`;
+      },
+    },
   }),
-});
+};
 
-// Set join-monster specific information here as it isn't part of the GraphQL
-// interface (this silences typescript errors).
-(user as any).sqlTable = 'posts';
-(user as any).uniqueKey = 'id';
+// tslint:disable-next-line
+const Post: GraphQLObjectType = new GraphQLObjectType(opts);
 
-export default post;
+export { Post };

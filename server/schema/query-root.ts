@@ -7,7 +7,7 @@ import {
 } from 'graphql';
 
 import * as knex from '../database';
-import User from './user';
+import { User } from './user';
 import fetch from './fetch';
 import joinMonster from 'join-monster';
 

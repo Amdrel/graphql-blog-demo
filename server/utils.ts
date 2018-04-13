@@ -1,7 +1,4 @@
-import * as config from './config';
 import HashidsObject from 'hashids';
-
-const hashids = new HashidsObject(config.hashids.salt);
 
 export namespace Environment {
   /**
@@ -49,7 +46,7 @@ export namespace Hashids {
    * A singleton method to get a pre-built hashids object so we don't have to
    * inject the config each time it's invoked.
    */
-  export function getInstance(): HashidsObject {
-    return hashids;
+  export function build(config: any): HashidsObject {
+    return new HashidsObject(config.hashids.salt);
   }
 }

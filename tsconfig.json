@@ -6,6 +6,13 @@
     "module": "commonjs",
     "sourceMap": true,
     "noImplicitAny": true,
+    "lib": [
+      "es2015",
+      "es2016",
+      "es2017",
+      "es2018",
+      "esnext.asynciterable"
+    ],
     "allowSyntheticDefaultImports": false
   }
 }

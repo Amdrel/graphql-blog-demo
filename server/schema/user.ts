@@ -6,12 +6,15 @@ import {
   GraphQLFloat,
 } from 'graphql';
 
-import Post from './post';
+import * as config from '../config';
 import { Hashids } from '../utils';
+import { Post } from './post';
 
-const user = new GraphQLObjectType({
+const opts = {
   description: '',
   name: 'User',
+  sqlTable: 'users',
+  uniqueKey: 'id',
 
   fields: () => ({
     id: {
@@ -19,34 +22,34 @@ const user = new GraphQLObjectType({
       sqlColumn: 'id',
       type: GraphQLString,
 
-      resolve: user => Hashids.getInstance().encode(user.id),
+      resolve: (user: any) => Hashids.build(config).encode(user.id),
     },
     email: {
       sqlColumn: 'email',
       type: GraphQLString,
 
-      resolve: user => `${user.email}`,
+      resolve: (user: any) => `${user.email}`,
     },
     fullName: {
       description: `A user's full name.`,
       sqlColumn: 'full_name',
       type: GraphQLString,
 
-      resolve: user => `${user.full_name}`,
+      resolve: (user: any) => `${user.full_name}`,
     },
     firstName: {
       description: `A user's first name.`,
       sqlColumn: 'first_name',
       type: GraphQLString,
 
-      resolve: user => `${user.first_name}`,
+      resolve: (user: any) => `${user.first_name}`,
     },
     lastName: {
       description: `A user's last name.`,
       sqlColumn: 'last_name',
       type: GraphQLString,
 
-      resolve: user => `${user.last_name}`,
+      resolve: (user: any) => `${user.last_name}`,
     },
     posts: {
       description: 'A list of posts the user has written.',
@@ -55,17 +58,14 @@ const user = new GraphQLObjectType({
 
       sqlJoin: (users: string, posts: string) => {
         return `
-          ${users}.id = ${posts}.author_id AND
-          ${users}.deleted_at IS NULL
-        `;
+          ${users}.id = ${posts}.owner_id AND
+          ${users}.deleted_at IS NULL`;
       },
     },
   }),
-});
+};
 
-// Set join-monster specific information here as it isn't part of the GraphQL
-// interface (this silences typescript errors).
-(user as any).sqlTable = 'users';
-(user as any).uniqueKey = 'id';
+// tslint:disable-next-line
+const User: GraphQLObjectType = new GraphQLObjectType(opts);
 
-export default user;
+export { User };
