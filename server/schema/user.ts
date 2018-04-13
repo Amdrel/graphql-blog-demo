@@ -1,14 +1,18 @@
 import {
-  GraphQLObjectType,
-  GraphQLList,
-  GraphQLString,
   GraphQLInt,
-  GraphQLFloat,
+  GraphQLList,
+  GraphQLObjectType,
+  GraphQLString,
 } from 'graphql';
+
+import {
+  connectionArgs,
+  connectionDefinitions,
+} from 'graphql-relay';
 
 import * as config from '../config';
 import { Hashids } from '../utils';
-import { Post } from './post';
+import { Post, PostConnection } from './post';
 
 const opts = {
   description: '',
@@ -53,8 +57,14 @@ const opts = {
     },
     posts: {
       description: 'A list of posts the user has written.',
-      type: new GraphQLList(Post),
-      orderBy: 'id',
+      type: PostConnection,
+      args: connectionArgs,
+      sqlPaginate: true,
+
+      sortKey: {
+        order: 'DESC',
+        key: 'id',
+      },
 
       sqlJoin: (users: string, posts: string) => {
         return `
@@ -68,4 +78,9 @@ const opts = {
 // tslint:disable-next-line
 const User: GraphQLObjectType = new GraphQLObjectType(opts);
 
-export { User };
+// tslint:disable-next-line
+const { connectionType: UserConnection } = connectionDefinitions({
+  nodeType: User,
+});
+
+export { User, UserConnection };

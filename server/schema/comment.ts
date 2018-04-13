@@ -1,9 +1,8 @@
 import {
-  GraphQLObjectType,
-  GraphQLList,
-  GraphQLString,
   GraphQLInt,
-  GraphQLFloat,
+  GraphQLList,
+  GraphQLObjectType,
+  GraphQLString,
 } from 'graphql';
 
 import * as config from '../config';

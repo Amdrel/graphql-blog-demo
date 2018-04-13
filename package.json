@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@types/graphql": "^0.13.0",
+    "@types/graphql-relay": "^0.4.5",
     "@types/hashids": "^1.0.30",
     "@types/js-yaml": "^3.11.1",
     "@types/knex": "^0.14.9",
@@ -22,6 +23,7 @@
     "@types/koa-router": "^7.0.27",
     "@types/node": "^9.6.2",
     "graphql": "^0.13.2",
+    "graphql-relay": "^0.5.5",
     "graphsiql": "^0.2.0",
     "hashids": "^1.1.4",
     "join-monster": "^2.0.16",

@@ -1,10 +1,13 @@
 import {
-  GraphQLObjectType,
-  GraphQLList,
-  GraphQLString,
   GraphQLInt,
-  GraphQLFloat,
+  GraphQLList,
+  GraphQLObjectType,
+  GraphQLString,
 } from 'graphql';
+
+import {
+  connectionDefinitions,
+} from 'graphql-relay';
 
 import * as config from '../config';
 import * as knex from '../database';
@@ -90,4 +93,9 @@ const opts = {
 // tslint:disable-next-line
 const Post: GraphQLObjectType = new GraphQLObjectType(opts);
 
-export { Post };
+// tslint:disable-next-line
+const { connectionType: PostConnection } = connectionDefinitions({
+  nodeType: Post,
+});
+
+export { Post, PostConnection };

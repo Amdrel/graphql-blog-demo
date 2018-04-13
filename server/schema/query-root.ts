@@ -1,19 +1,26 @@
 import {
-  GraphQLObjectType,
+  GraphQLError,
+  GraphQLInt,
   GraphQLList,
   GraphQLNonNull,
+  GraphQLObjectType,
   GraphQLString,
-  GraphQLInt,
-  GraphQLError,
 } from 'graphql';
+
+import {
+  connectionArgs,
+} from 'graphql-relay';
 
 import * as config from '../config';
 import * as knex from '../database';
 import fetch from './fetch';
 import joinMonster from 'join-monster';
 import { Hashids } from '../utils';
-import { Post } from './post';
-import { User } from './user';
+import { Post, PostConnection } from './post';
+import { User, UserConnection } from './user';
+import { nodeField } from './node';
+
+const joinMonsterOptions = { dialect: config.knex.client };
 
 export default new GraphQLObjectType({
   description: 'Global query object.',
@@ -25,15 +32,24 @@ export default new GraphQLObjectType({
       resolve: () => (joinMonster as any).version,
     },
 
+    node: nodeField,
+
     users: {
       description: 'A list of users in the system.',
-      type: new GraphQLList(User),
-      orderBy: 'id',
+      type: UserConnection,
+      args: connectionArgs,
+      sqlPaginate: true,
+
+      sortKey: {
+        order: 'DESC',
+        key: 'id',
+      },
 
       resolve: (parent, args, context, resolveInfo) => {
-        return joinMonster(resolveInfo, context, (sql: string) => {
+        const executor = (sql: string) => {
           return fetch(sql, args, context);
-        });
+        };
+        return joinMonster(resolveInfo, context, executor, joinMonsterOptions);
       },
     },
 
@@ -58,21 +74,31 @@ export default new GraphQLObjectType({
           throw new GraphQLError(`Invalid id format.`);
         }
 
-        return joinMonster(resolveInfo, context, (sql: string) => {
+        const executor = (sql: string) => {
           return fetch(sql, args, context);
-        });
+        };
+        return joinMonster(resolveInfo, context, executor, joinMonsterOptions);
       },
     },
 
     posts: {
       description: 'A list of posts in the system.',
-      type: new GraphQLList(Post),
-      orderBy: 'id',
+      type: PostConnection,
+      args: connectionArgs,
+      sqlPaginate: true,
+
+      sortKey: {
+        order: 'DESC',
+        key: 'id',
+      },
+
+      where: (posts: string) => `${posts}.deleted_at IS NULL`,
 
       resolve: (parent, args, context, resolveInfo) => {
-        return joinMonster(resolveInfo, context, (sql: string) => {
+        const executor = (sql: string) => {
           return fetch(sql, args, context);
-        });
+        };
+        return joinMonster(resolveInfo, context, executor, joinMonsterOptions);
       },
     },
 
@@ -85,8 +111,8 @@ export default new GraphQLObjectType({
         },
       },
 
-      where: (postsTable: string, args: any, context: any) => {
-        return `${postsTable}.id = :id`;
+      where: (posts: string, args: any, context: any) => {
+        return `${posts}.id = :id AND ${posts}.deleted_at IS NULL`;
       },
 
       resolve: (parent, args, context, resolveInfo) => {
@@ -97,9 +123,10 @@ export default new GraphQLObjectType({
           throw new GraphQLError(`Invalid id format.`);
         }
 
-        return joinMonster(resolveInfo, context, (sql: string) => {
+        const executor = (sql: string) => {
           return fetch(sql, args, context);
-        });
+        };
+        return joinMonster(resolveInfo, context, executor, joinMonsterOptions);
       },
     },
   }),
