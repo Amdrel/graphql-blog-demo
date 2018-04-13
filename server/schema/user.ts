@@ -18,7 +18,7 @@ const opts = {
 
   fields: () => ({
     id: {
-      description: 'The ID hashid encoded.',
+      description: 'The id hashid encoded.',
       sqlColumn: 'id',
       type: GraphQLString,
 
