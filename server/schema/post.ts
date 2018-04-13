@@ -74,10 +74,10 @@ const opts = {
       sqlExpr: (posts: string) => {
         const query = knex.select(knex.count('*'))
           .from('comments')
-          .where('post_id', '=', `${posts}.id`)
+          .where('post_id', '=', knex.raw(`${posts}.id`))
           .whereNull('deleted_at');
 
-        // Join monster will add it's own SELECT token, so remove the one that
+        // Join monster will add its own SELECT token, so remove the one that
         // knex generates with the query builder.
         const strippedQuery = `${query}`.substring(7);
 

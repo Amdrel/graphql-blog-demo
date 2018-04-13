@@ -28,7 +28,7 @@ export default new GraphQLObjectType({
 
       resolve: (parent, args, context, resolveInfo) => {
         return joinMonster(resolveInfo, context, (sql: string) => {
-          return fetch(sql, context);
+          return fetch(sql, args, context);
         });
       },
     },
@@ -42,16 +42,13 @@ export default new GraphQLObjectType({
         },
       },
 
-      // FIXME: Use prepared query to minimize risk of SQL injection. In this
-      // case the value is guarenteed to be a number, but using a string would
-      // spell issues.
       where: (usersTable: string, args: any, context: any) => {
-        return `${usersTable}.id = ${args.id}`;
+        return `${usersTable}.id = :id`;
       },
 
       resolve: (parent, args, context, resolveInfo) => {
         return joinMonster(resolveInfo, context, (sql: string) => {
-          return fetch(sql, context);
+          return fetch(sql, args, context);
         });
       },
     },

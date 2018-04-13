@@ -35,21 +35,21 @@ const opts = {
       sqlColumn: 'full_name',
       type: GraphQLString,
 
-      resolve: (user: any) => `${user.full_name}`,
+      resolve: (user: any) => `${user.fullName}`,
     },
     firstName: {
       description: `A user's first name.`,
       sqlColumn: 'first_name',
       type: GraphQLString,
 
-      resolve: (user: any) => `${user.first_name}`,
+      resolve: (user: any) => `${user.firstName}`,
     },
     lastName: {
       description: `A user's last name.`,
       sqlColumn: 'last_name',
       type: GraphQLString,
 
-      resolve: (user: any) => `${user.last_name}`,
+      resolve: (user: any) => `${user.lastName}`,
     },
     posts: {
       description: 'A list of posts the user has written.',

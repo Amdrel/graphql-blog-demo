@@ -1,4 +1,4 @@
-import HashidsObject from 'hashids';
+import * as HashidsObject from 'hashids';
 
 export namespace Environment {
   /**
@@ -43,10 +43,16 @@ export namespace Environment {
 
 export namespace Hashids {
   /**
-   * A singleton method to get a pre-built hashids object so we don't have to
-   * inject the config each time it's invoked.
+   * A builder method to get a pre-built hashids object so we don't have to
+   * inject the config manully each time it's invoked.
    */
-  export function build(config: any): HashidsObject {
-    return new HashidsObject(config.hashids.salt);
+  export function build(config: any): HashidsObject.default {
+    // The hashids typescript definition file has errors that make it transpile
+    // to javascript incorrectly, even if the type system is happy. Do some
+    // black magic to make the type system happy and actually use the right
+    // constructor.
+    const hashids: HashidsObject.default = new (HashidsObject as any)(
+      config.hashids.salt, config.hashids.minLength);
+    return hashids;
   }
 }

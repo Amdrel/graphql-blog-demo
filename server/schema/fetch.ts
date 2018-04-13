@@ -11,7 +11,7 @@ import { Environment } from '../utils';
  * @param knex
  * @param context
  */
-export default function fetch(sql: string, context: any): Knex.Raw {
+export default function fetch(sql: string, args: any, context: any): Knex.Raw {
   // This is a little trick to help debugging and demo-ing. the client will
   // display whatever is on the X-SQL-Preview header DONT do something like this
   // in production (which is why we check).
@@ -23,5 +23,5 @@ export default function fetch(sql: string, context: any): Knex.Raw {
     context.set('X-SQL-Preview', value);
   }
 
-  return knex.raw(sql);
+  return knex.raw(sql, args);
 }

@@ -32,6 +32,13 @@ const opts = {
 
       resolve: (post: any) => Hashids.build(config).encode(post.id),
     },
+    postId: {
+      description: 'The post ID hashid encoded.',
+      sqlColumn: 'post_id',
+      type: GraphQLString,
+
+      resolve: (post: any) => Hashids.build(config).encode(post.id),
+    },
     body: {
       description: `Body of the blog post.`,
       sqlColumn: 'body',
