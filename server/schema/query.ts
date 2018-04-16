@@ -25,9 +25,10 @@ const GraphQLHashId = Hashids.getGraphQLHashId();
 
 const joinMonsterOptions = { dialect: config.knex.client };
 
-export default new GraphQLObjectType({
-  description: 'Global query object.',
+// tslint:disable-next-line
+const Query = new GraphQLObjectType({
   name: 'Query',
+  description: 'Global query object.',
 
   fields: () => ({
     version: {
@@ -48,6 +49,8 @@ export default new GraphQLObjectType({
         key: 'id',
       },
 
+      where: (users: string) => `${users}.deleted_at IS NULL`,
+
       resolve: (parent, args, context, resolveInfo) => {
         const dbCall = (sql: string) => {
           return fetch(sql, args, context);
@@ -65,8 +68,8 @@ export default new GraphQLObjectType({
         },
       },
 
-      where: (usersTable: string, args: any, context: any) => {
-        return `${usersTable}.id = :id`;
+      where: (users: string, args: any, context: any) => {
+        return `${users}.id = :id AND ${users}.deleted_at IS NULL`;
       },
 
       resolve: (parent, args, context, resolveInfo) => {
@@ -120,3 +123,5 @@ export default new GraphQLObjectType({
     },
   }),
 });
+
+export { Query };

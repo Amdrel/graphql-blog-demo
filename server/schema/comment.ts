@@ -32,14 +32,14 @@ const opts = {
       sqlColumn: 'owner_id',
       type: GraphQLHashId,
 
-      resolve: (comment: any) => comment.owner_id,
+      resolve: (comment: any) => comment.ownerId,
     },
     postId: {
       description: 'The post ID hashid encoded.',
       sqlColumn: 'post_id',
       type: GraphQLHashId,
 
-      resolve: (comment: any) => comment.post_id,
+      resolve: (comment: any) => comment.postId,
     },
     body: {
       description: `Body of the blog post.`,

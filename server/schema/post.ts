@@ -37,7 +37,7 @@ const opts = {
       sqlColumn: 'owner_id',
       type: GraphQLHashId,
 
-      resolve: (post: any) => post.owner_id,
+      resolve: (post: any) => post.ownerId,
     },
     title: {
       description: `Title to the blog post.`,

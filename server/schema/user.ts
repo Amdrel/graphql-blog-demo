@@ -1,6 +1,9 @@
 import {
+  GraphQLFieldConfig,
+  GraphQLInputObjectType,
   GraphQLInt,
   GraphQLList,
+  GraphQLNonNull,
   GraphQLObjectType,
   GraphQLString,
 } from 'graphql';
@@ -8,14 +11,20 @@ import {
 import {
   connectionArgs,
   connectionDefinitions,
+  mutationWithClientMutationId,
 } from 'graphql-relay';
 
 import * as config from '../config';
+import * as knex from '../database';
+import fetch from './fetch';
+import joinMonster from 'join-monster';
 import { Hashids } from '../utils';
 import { Post, PostConnection } from './post';
 
 // tslint:disable-next-line
 const GraphQLHashId = Hashids.getGraphQLHashId();
+
+const joinMonsterOptions = { dialect: config.knex.client };
 
 const opts = {
   description: '',
@@ -79,11 +88,72 @@ const opts = {
 };
 
 // tslint:disable-next-line
-const User: GraphQLObjectType = new GraphQLObjectType(opts);
+const User = new GraphQLObjectType(opts);
+
+// tslint:disable-next-line
+const RegisterUser = mutationWithClientMutationId({
+  name: 'RegisterUser',
+
+  inputFields: {
+    email: {
+      type: new GraphQLNonNull(GraphQLString),
+      description: `The user's email address.`,
+    },
+    fullName: {
+      type: new GraphQLNonNull(GraphQLString),
+      description: `The user's full name.`,
+    },
+    password: {
+      type: new GraphQLNonNull(GraphQLString),
+      description: `The user's unhashed name (hashed in storage).`,
+    },
+  },
+
+  outputFields: {
+    user: {
+      type: User,
+
+      where: (users: string, args: any, context: any) => {
+        return `${users}.id = :id AND ${users}.deleted_at IS NULL`;
+      },
+
+      resolve: (parent, args, context, resolveInfo) => {
+        const dbCall = (sql: string) => {
+          return fetch(sql, { id: parent.id }, context);
+        };
+        return joinMonster(resolveInfo, context, dbCall, joinMonsterOptions);
+      },
+    },
+  },
+
+  mutateAndGetPayload: async (args, context, resolveInfo): Promise<any> => {
+    const data = {
+      email: args.email,
+      full_name: args.fullName,
+      first_name: 'First',
+      last_name: 'Last',
+      password: 'tmp',
+    };
+
+    const query = knex('users').insert(data).returning('id');
+
+    return query.then((id) => {
+      return { id: id[0] };
+    }).catch((e) => {
+      if (e.code === '23505') {
+        if (e.constraint === 'users_email_key') {
+          throw new Error(`Email is already in use by another account.`);
+        }
+      }
+
+      throw new Error(`Unable to process request due to an internal error.`);
+    });
+  },
+});
 
 // tslint:disable-next-line
 const { connectionType: UserConnection } = connectionDefinitions({
   nodeType: User,
 });
 
-export { User, UserConnection };
+export { User, UserConnection, RegisterUser };
