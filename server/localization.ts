@@ -4,10 +4,14 @@ interface Translation {
   [locale: string]: string;
 }
 
+interface Translations {
+  [string: string]: Translation;
+}
+
 /**
  * All human-readable strings and their translations are stored here.
  */
-const translations: { [string: string]: Translation } = {
+const translations: Translations = {
   'InternalError': {
     'en': `Unable to process request due to an internal error.`,
   },
