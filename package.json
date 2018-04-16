@@ -23,6 +23,7 @@
     "@types/koa-router": "^7.0.27",
     "@types/node": "^9.6.2",
     "graphql": "^0.13.2",
+    "graphql-hashid-type": "^0.1.1",
     "graphql-relay": "^0.5.5",
     "graphsiql": "^0.2.0",
     "hashids": "^1.1.4",

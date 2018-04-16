@@ -10,6 +10,9 @@ import * as knex from '../database';
 import { Hashids } from '../utils';
 import { User } from './user';
 
+// tslint:disable-next-line
+const GraphQLHashId = Hashids.getGraphQLHashId();
+
 const opts = {
   description: '',
   name: 'Comment',
@@ -20,23 +23,23 @@ const opts = {
     id: {
       description: 'The ID hashid encoded.',
       sqlColumn: 'id',
-      type: GraphQLString,
+      type: GraphQLHashId,
 
-      resolve: (post: any) => Hashids.build(config).encode(post.id),
+      resolve: (comment: any) => comment.id,
     },
     ownerId: {
       description: 'The owner ID hashid encoded.',
       sqlColumn: 'owner_id',
-      type: GraphQLString,
+      type: GraphQLHashId,
 
-      resolve: (post: any) => Hashids.build(config).encode(post.id),
+      resolve: (comment: any) => comment.owner_id,
     },
     postId: {
       description: 'The post ID hashid encoded.',
       sqlColumn: 'post_id',
-      type: GraphQLString,
+      type: GraphQLHashId,
 
-      resolve: (post: any) => Hashids.build(config).encode(post.id),
+      resolve: (comment: any) => comment.post_id,
     },
     body: {
       description: `Body of the blog post.`,

@@ -1,4 +1,7 @@
 import * as HashidsObject from 'hashids';
+import * as GraphQLHashIdType from 'graphql-hashid-type';
+
+let graphQLHashIdInstance: any;
 
 export namespace Environment {
   /**
@@ -43,6 +46,17 @@ export namespace Environment {
 
 export namespace Hashids {
   /**
+   * Singleton to get a GraphQLHashId type using our hashids config.
+   */
+  export function getGraphQLHashId(): any {
+    if (graphQLHashIdInstance == null) {
+      const config = require('./config');
+      graphQLHashIdInstance = Hashids.buildType(config);
+    }
+    return graphQLHashIdInstance;
+  }
+
+  /**
    * A builder method to get a pre-built hashids object so we don't have to
    * inject the config manully each time it's invoked.
    */
@@ -52,7 +66,19 @@ export namespace Hashids {
     // black magic to make the type system happy and actually use the right
     // constructor.
     const hashids: HashidsObject.default = new (HashidsObject as any)(
-      config.hashids.salt, config.hashids.minLength);
+      config.hashids.salt,
+      config.hashids.minLength);
     return hashids;
+  }
+
+  /**
+   * Siliar to build but returns a GraphQL type for coercing pks to id strings.
+   * This function returns 'any' for the time being as the library being used
+   * doesn't support typescript.
+   */
+  export function buildType(config: any): any {
+    return new GraphQLHashIdType.default(
+      config.hashids.salt,
+      config.hashids.minLength);
   }
 }

@@ -15,6 +15,9 @@ import { Comment } from './comment';
 import { Hashids } from '../utils';
 import { User } from './user';
 
+// tslint:disable-next-line
+const GraphQLHashId = Hashids.getGraphQLHashId();
+
 const opts = {
   description: '',
   name: 'Post',
@@ -25,16 +28,16 @@ const opts = {
     id: {
       description: 'The ID hashid encoded.',
       sqlColumn: 'id',
-      type: GraphQLString,
+      type: GraphQLHashId,
 
-      resolve: (post: any) => Hashids.build(config).encode(post.id),
+      resolve: (post: any) => post.id,
     },
     ownerId: {
       description: 'The owner ID hashid encoded.',
       sqlColumn: 'owner_id',
-      type: GraphQLString,
+      type: GraphQLHashId,
 
-      resolve: (post: any) => Hashids.build(config).encode(post.id),
+      resolve: (post: any) => post.owner_id,
     },
     title: {
       description: `Title to the blog post.`,

@@ -20,6 +20,9 @@ import { Post, PostConnection } from './post';
 import { User, UserConnection } from './user';
 import { nodeField } from './node';
 
+// tslint:disable-next-line
+const GraphQLHashId = Hashids.getGraphQLHashId();
+
 const joinMonsterOptions = { dialect: config.knex.client };
 
 export default new GraphQLObjectType({
@@ -46,10 +49,10 @@ export default new GraphQLObjectType({
       },
 
       resolve: (parent, args, context, resolveInfo) => {
-        const executor = (sql: string) => {
+        const dbCall = (sql: string) => {
           return fetch(sql, args, context);
         };
-        return joinMonster(resolveInfo, context, executor, joinMonsterOptions);
+        return joinMonster(resolveInfo, context, dbCall, joinMonsterOptions);
       },
     },
 
@@ -58,7 +61,7 @@ export default new GraphQLObjectType({
       args: {
         id: {
           description: `The user's unique id.`,
-          type: new GraphQLNonNull(GraphQLString),
+          type: new GraphQLNonNull(GraphQLHashId),
         },
       },
 
@@ -67,17 +70,10 @@ export default new GraphQLObjectType({
       },
 
       resolve: (parent, args, context, resolveInfo) => {
-        const unencodedId = Hashids.build(config).decode(args.id)[0];
-        if (unencodedId != null) {
-          args.id = unencodedId;
-        } else {
-          throw new GraphQLError(`Invalid id format.`);
-        }
-
-        const executor = (sql: string) => {
+        const dbCall = (sql: string) => {
           return fetch(sql, args, context);
         };
-        return joinMonster(resolveInfo, context, executor, joinMonsterOptions);
+        return joinMonster(resolveInfo, context, dbCall, joinMonsterOptions);
       },
     },
 
@@ -95,10 +91,10 @@ export default new GraphQLObjectType({
       where: (posts: string) => `${posts}.deleted_at IS NULL`,
 
       resolve: (parent, args, context, resolveInfo) => {
-        const executor = (sql: string) => {
+        const dbCall = (sql: string) => {
           return fetch(sql, args, context);
         };
-        return joinMonster(resolveInfo, context, executor, joinMonsterOptions);
+        return joinMonster(resolveInfo, context, dbCall, joinMonsterOptions);
       },
     },
 
@@ -107,7 +103,7 @@ export default new GraphQLObjectType({
       args: {
         id: {
           description: `The post's unique id.`,
-          type: new GraphQLNonNull(GraphQLString),
+          type: new GraphQLNonNull(GraphQLHashId),
         },
       },
 
@@ -116,17 +112,10 @@ export default new GraphQLObjectType({
       },
 
       resolve: (parent, args, context, resolveInfo) => {
-        const unencodedId = Hashids.build(config).decode(args.id)[0];
-        if (unencodedId != null) {
-          args.id = unencodedId;
-        } else {
-          throw new GraphQLError(`Invalid id format.`);
-        }
-
-        const executor = (sql: string) => {
+        const dbCall = (sql: string) => {
           return fetch(sql, args, context);
         };
-        return joinMonster(resolveInfo, context, executor, joinMonsterOptions);
+        return joinMonster(resolveInfo, context, dbCall, joinMonsterOptions);
       },
     },
   }),

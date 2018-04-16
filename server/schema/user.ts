@@ -14,6 +14,9 @@ import * as config from '../config';
 import { Hashids } from '../utils';
 import { Post, PostConnection } from './post';
 
+// tslint:disable-next-line
+const GraphQLHashId = Hashids.getGraphQLHashId();
+
 const opts = {
   description: '',
   name: 'User',
@@ -24,9 +27,9 @@ const opts = {
     id: {
       description: 'The id hashid encoded.',
       sqlColumn: 'id',
-      type: GraphQLString,
+      type: GraphQLHashId,
 
-      resolve: (user: any) => Hashids.build(config).encode(user.id),
+      resolve: (user: any) => user.id,
     },
     email: {
       sqlColumn: 'email',
