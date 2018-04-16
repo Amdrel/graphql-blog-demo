@@ -20,6 +20,7 @@ import fetch from './fetch';
 import joinMonster from 'join-monster';
 import { Hashids } from '../utils';
 import { Post, PostConnection } from './post';
+import { getLocaleString } from '../localization';
 
 // tslint:disable-next-line
 const GraphQLHashId = Hashids.getGraphQLHashId();
@@ -142,11 +143,11 @@ const RegisterUser = mutationWithClientMutationId({
     }).catch((e) => {
       if (e.code === '23505') {
         if (e.constraint === 'users_email_key') {
-          throw new Error(`Email is already in use by another account.`);
+          throw new Error(getLocaleString('EmailClaimedError'));
         }
       }
 
-      throw new Error(`Unable to process request due to an internal error.`);
+      throw new Error(getLocaleString(`InternalError`));
     });
   },
 });

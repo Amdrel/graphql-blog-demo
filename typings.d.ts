@@ -1,6 +1,6 @@
-declare module 'koa-graphql';
-declare module 'koa-custom-graphiql';
-declare module 'koa-static';
-declare module 'koa-convert';
-declare module 'join-monster';
 declare module 'graphql-hashid-type';
+declare module 'join-monster';
+declare module 'koa-convert';
+declare module 'koa-custom-graphiql';
+declare module 'koa-graphql';
+declare module 'koa-static';
