@@ -7,7 +7,7 @@ const knex = Knex(config['knex']);
 knex.raw(`SELECT 1 + 1 AS result`).then(() => {
   console.log(`Database connection established.`);
 }).catch((e: Error) => {
-  console.log(e);
+  console.error(`Unable to connect to database: ${e.message}`);
 });
 
 export = knex;

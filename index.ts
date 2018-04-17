@@ -7,6 +7,9 @@ import * as path from 'path';
 import defaultSchema from './server/schema';
 import graphiql from 'koa-custom-graphiql';
 import { Environment } from './server/utils';
+import { GraphQLError } from 'graphql';
+import { UserError, ValidationError } from './server/errors';
+import { getLocaleString } from './server/localization';
 
 const app = new Koa();
 const router = new KoaRouter();
@@ -14,8 +17,14 @@ const router = new KoaRouter();
 router.post('/graphql', koaConvert(graphqlHTTP({
   schema: defaultSchema,
 
-  formatError: (e: Error) => {
-    console.error(e);
+  formatError: (e: GraphQLError) => {
+    if ((e.originalError as any).isUserError) {
+      return e;
+    }
+
+    console.error(e.stack);
+
+    e.message = getLocaleString('InternalError');
     return e;
   },
 })));

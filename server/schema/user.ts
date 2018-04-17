@@ -6,6 +6,7 @@ import {
   GraphQLNonNull,
   GraphQLObjectType,
   GraphQLString,
+  GraphQLError
 } from 'graphql';
 
 import {
@@ -20,6 +21,7 @@ import fetch from './fetch';
 import joinMonster from 'join-monster';
 import { Hashids } from '../utils';
 import { Post, PostConnection } from './post';
+import { ValidationError } from '../errors';
 import { getLocaleString } from '../localization';
 
 // tslint:disable-next-line
@@ -143,7 +145,7 @@ const RegisterUser = mutationWithClientMutationId({
     }).catch((e) => {
       if (e.code === '23505') {
         if (e.constraint === 'users_email_key') {
-          throw new Error(getLocaleString('EmailClaimedError'));
+          throw new ValidationError(getLocaleString('EmailClaimedError'));
         }
       }
 
