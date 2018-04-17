@@ -18,7 +18,7 @@ router.post('/graphql', koaConvert(graphqlHTTP({
   schema: defaultSchema,
 
   formatError: (e: GraphQLError) => {
-    if ((e.originalError as any).isUserError) {
+    if (e.originalError instanceof UserError) {
       return e;
     }
 
