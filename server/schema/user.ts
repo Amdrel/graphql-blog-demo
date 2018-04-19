@@ -6,7 +6,7 @@ import {
   GraphQLNonNull,
   GraphQLObjectType,
   GraphQLString,
-  GraphQLError
+  GraphQLError,
 } from 'graphql';
 
 import {
