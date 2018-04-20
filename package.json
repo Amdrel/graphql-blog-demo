@@ -14,14 +14,18 @@
     "typescript": "^2.8.1"
   },
   "dependencies": {
+    "@types/argon2": "^0.15.0",
     "@types/graphql": "^0.13.0",
     "@types/graphql-relay": "^0.4.5",
     "@types/hashids": "^1.0.30",
     "@types/js-yaml": "^3.11.1",
+    "@types/jsonwebtoken": "^7.2.6",
     "@types/knex": "^0.14.9",
     "@types/koa": "^2.0.45",
     "@types/koa-router": "^7.0.27",
     "@types/node": "^9.6.2",
+    "@types/validator": "^9.4.0",
+    "argon2": "^0.18.0",
     "graphql": "^0.13.2",
     "graphql-hashid-type": "^0.1.1",
     "graphql-relay": "^0.5.5",
@@ -29,12 +33,15 @@
     "hashids": "^1.1.4",
     "join-monster": "^2.0.16",
     "js-yaml": "^3.11.0",
+    "jsonwebtoken": "^8.2.1",
     "knex": "^0.14.4",
     "koa": "^2.5.0",
     "koa-custom-graphiql": "^1.0.1",
     "koa-graphql": "^0.7.5",
     "koa-router": "^7.4.0",
     "koa-static": "^4.0.2",
-    "pg": "^7.4.1"
+    "parse-full-name": "^1.2.3",
+    "pg": "^7.4.1",
+    "validator": "^9.4.1"
   }
 }

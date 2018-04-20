@@ -4,3 +4,4 @@ declare module 'koa-convert';
 declare module 'koa-custom-graphiql';
 declare module 'koa-graphql';
 declare module 'koa-static';
+declare module 'parse-full-name';

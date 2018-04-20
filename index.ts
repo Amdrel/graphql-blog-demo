@@ -24,7 +24,7 @@ router.post('/graphql', koaConvert(graphqlHTTP({
 
     console.error(e.stack);
 
-    e.message = getLocaleString('InternalError');
+    e.message = getLocaleString('InternalError', null);
     return e;
   },
 })));

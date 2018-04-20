@@ -15,21 +15,25 @@ import {
   mutationWithClientMutationId,
 } from 'graphql-relay';
 
+import * as argon2 from 'argon2';
 import * as config from '../config';
 import * as knex from '../database';
+import * as validator from 'validator';
 import fetch from './fetch';
 import joinMonster from 'join-monster';
 import { Hashids } from '../utils';
 import { Post, PostConnection } from './post';
-import { ValidationError } from '../errors';
+import { UserError, ValidationError } from '../errors';
 import { getLocaleString } from '../localization';
+import { parseFullName } from 'parse-full-name';
 
 // tslint:disable-next-line
 const GraphQLHashId = Hashids.getGraphQLHashId();
 
 const joinMonsterOptions = { dialect: config.knex.client };
 
-const opts = {
+// tslint:disable-next-line
+const User = new GraphQLObjectType({
   description: '',
   name: 'User',
   sqlTable: 'users',
@@ -88,10 +92,7 @@ const opts = {
       },
     },
   }),
-};
-
-// tslint:disable-next-line
-const User = new GraphQLObjectType(opts);
+} as any);
 
 // tslint:disable-next-line
 const RegisterUser = mutationWithClientMutationId({
@@ -130,27 +131,68 @@ const RegisterUser = mutationWithClientMutationId({
   },
 
   mutateAndGetPayload: async (args, context, resolveInfo): Promise<any> => {
+    if (!validator.isLength(args.email, { min: 6, max: 190 })) {
+      throw new ValidationError(getLocaleString('InvalidEmailLength', context, {
+        min: 6,
+        max: 190,
+      }));
+    }
+    if (!validator.isEmail(args.email)) {
+      throw new ValidationError(getLocaleString('InvalidEmail', context));
+    }
+
+    if (!validator.isLength(args.fullName, { min: 4, max: 190 })) {
+      throw new ValidationError(getLocaleString('InvalidNameLength', context, {
+        min: 4,
+        max: 190,
+      }));
+    }
+    const fullName = parseFullName(args.fullName);
+
+    // No funky special character nonsense. Upper bound on password prevents
+    // DoS: http://permalink.gmane.org/gmane.comp.python.django.devel/39831
+    if (!validator.isLength(args.password, { min: 8, max: 190 })) {
+      throw new ValidationError(getLocaleString('InvalidPasswordLength', context, {
+        min: 8,
+        max: 4096,
+      }));
+    }
+    const hashedPassword = await argon2.hash(args.password, {
+      type: argon2.argon2id,
+    });
+
     const data = {
       email: args.email,
       full_name: args.fullName,
-      first_name: 'First',
-      last_name: 'Last',
-      password: 'tmp',
+      first_name: fullName.first,
+      last_name: fullName.last,
+      password: hashedPassword,
     };
 
-    const query = knex('users').insert(data).returning('id');
-
-    return query.then((id) => {
-      return { id: id[0] };
-    }).catch((e) => {
-      if (e.code === '23505') {
-        if (e.constraint === 'users_email_key') {
-          throw new ValidationError(getLocaleString('EmailClaimedError'));
+    try {
+      return await knex.transaction(async (tx) => {
+        // Check email using an extra SELECT to avoid incrementing the SERIAL
+        // sequence with repeated failed attempts.
+        const emailResults = await knex('users')
+          .select(knex.raw(1))
+          .where({ email: args.email });
+        if (emailResults.length > 0) {
+          throw new ValidationError(getLocaleString('EmailClaimedError', context));
         }
-      }
 
-      throw new Error(getLocaleString(`InternalError`));
-    });
+        // Register the account and return the id so join monster can query the
+        // new account details and deliver them to the client.
+        const id = await knex('users')
+          .insert(data)
+          .returning('id');
+        return { id: id[0] };
+      });
+    } catch (e) {
+      if (e instanceof UserError) {
+        throw e;
+      }
+      throw new Error(getLocaleString(`InternalError`, context));
+    }
   },
 });
 

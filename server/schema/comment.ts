@@ -13,7 +13,8 @@ import { User } from './user';
 // tslint:disable-next-line
 const GraphQLHashId = Hashids.getGraphQLHashId();
 
-const opts = {
+// tslint:disable-next-line
+const Comment: GraphQLObjectType = new GraphQLObjectType({
   description: '',
   name: 'Comment',
   sqlTable: 'comments',
@@ -57,9 +58,6 @@ const opts = {
       },
     },
   }),
-};
-
-// tslint:disable-next-line
-const Comment: GraphQLObjectType = new GraphQLObjectType(opts);
+} as any);
 
 export { Comment };

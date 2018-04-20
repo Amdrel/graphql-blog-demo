@@ -18,7 +18,8 @@ import { User } from './user';
 // tslint:disable-next-line
 const GraphQLHashId = Hashids.getGraphQLHashId();
 
-const opts = {
+// tslint:disable-next-line
+const Post: GraphQLObjectType = new GraphQLObjectType({
   description: '',
   name: 'Post',
   sqlTable: 'posts',
@@ -91,10 +92,7 @@ const opts = {
       },
     },
   }),
-};
-
-// tslint:disable-next-line
-const Post: GraphQLObjectType = new GraphQLObjectType(opts);
+} as any);
 
 // tslint:disable-next-line
 const { connectionType: PostConnection } = connectionDefinitions({

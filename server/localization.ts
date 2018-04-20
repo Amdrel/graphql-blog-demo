@@ -1,7 +1,9 @@
 /* tslint:disable:object-literal-key-quotes */
 
+type TemplatedTranslation = (args: any) => string;
+
 interface Translation {
-  [locale: string]: string;
+  [locale: string]: string | TemplatedTranslation;
 }
 
 interface Translations {
@@ -18,6 +20,18 @@ const translations: Translations = {
   'EmailClaimedError': {
     'en': `Email is already in use by another account.`,
   },
+  'InvalidEmail': {
+    'en': `The specified email isn't a valid email address.`,
+  },
+  'InvalidEmailLength': {
+    'en': (args: any) => `Email must be between ${args.min} and ${args.max} chatacters long.`,
+  },
+  'InvalidNameLength': {
+    'en': (args: any) => `Name must be between ${args.min} and ${args.max} chatacters long.`,
+  },
+  'InvalidPasswordLength': {
+    'en': (args: any) => `Password must be at least ${args.min} chatacters long.`,
+  },
 };
 
 /**
@@ -25,9 +39,14 @@ const translations: Translations = {
  * @param string
  * @param locale
  */
-export function getLocaleString(string: string, locale = 'en'): string {
+export function getLocaleString(string: string, context: any, args?: any): string {
   if (!(string in translations)) {
     throw new Error(`Unsupported translation string requested.`);
+  }
+
+  const locale = 'en';
+  if (context != null) {
+    // TODO: Handle different locales.
   }
 
   const candidates = translations[string];
@@ -40,5 +59,10 @@ export function getLocaleString(string: string, locale = 'en'): string {
     throw new Error(`No translations are available for the requested string.`);
   }
 
-  return candidates[actualLocale];
+  const candidate = candidates[actualLocale];
+  if (typeof candidate === 'string') {
+    return candidate as string;
+  } else {
+    return candidate(args);
+  }
 }
