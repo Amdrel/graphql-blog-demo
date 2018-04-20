@@ -22,6 +22,7 @@ import * as validator from 'validator';
 import fetch from './fetch';
 import joinMonster from 'join-monster';
 import { Hashids } from '../utils';
+import { JWTToken } from './jwt-token';
 import { Post, PostConnection } from './post';
 import { UserError, ValidationError } from '../errors';
 import { getLocaleString } from '../localization';
@@ -117,15 +118,19 @@ const RegisterUser = mutationWithClientMutationId({
     user: {
       type: User,
 
-      where: (users: string, args: any, context: any) => {
-        return `${users}.id = :id AND ${users}.deleted_at IS NULL`;
-      },
-
-      resolve: (parent, args, context, resolveInfo) => {
+      resolve: (payload, args, context, resolveInfo) => {
         const dbCall = (sql: string) => {
-          return fetch(sql, { id: parent.id }, context);
+          return fetch(sql, { id: payload.userId }, context);
         };
         return joinMonster(resolveInfo, context, dbCall, joinMonsterOptions);
+      },
+    },
+
+    jwtToken: {
+      type: JWTToken,
+
+      resolve: (payload, args, context, resolveInfo) => {
+        return payload;
       },
     },
   },
@@ -185,7 +190,7 @@ const RegisterUser = mutationWithClientMutationId({
         const id = await knex('users')
           .insert(data)
           .returning('id');
-        return { id: id[0] };
+        return { userId: id[0] };
       });
     } catch (e) {
       if (e instanceof UserError) {

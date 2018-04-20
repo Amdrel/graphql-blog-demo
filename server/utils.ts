@@ -1,5 +1,6 @@
-import * as HashidsObject from 'hashids';
 import * as GraphQLHashIdType from 'graphql-hashid-type';
+import * as HashidsObject from 'hashids';
+import * as jwt from 'jsonwebtoken';
 
 let graphQLHashIdInstance: any;
 
@@ -46,12 +47,14 @@ export namespace Environment {
 
 export namespace Hashids {
   /**
-   * Singleton to get a GraphQLHashId type using our hashids config.
+   * Singleton to get a GraphQLHashId type using our hashids config. This
+   * function reads the config with a syncronous load so the GraphQL type
+   * resolves immediately as they shoud be in the global namespace.
    */
   export function getGraphQLHashId(): any {
     if (graphQLHashIdInstance == null) {
       const config = require('./config');
-      graphQLHashIdInstance = Hashids.buildType(config);
+      graphQLHashIdInstance = buildType(config);
     }
     return graphQLHashIdInstance;
   }
@@ -76,9 +79,59 @@ export namespace Hashids {
    * This function returns 'any' for the time being as the library being used
    * doesn't support typescript.
    */
-  export function buildType(config: any): any {
+  function buildType(config: any): any {
     return new GraphQLHashIdType.default(
       config.hashids.salt,
       config.hashids.minLength);
+  }
+}
+
+export namespace Crypto {
+  type JWTPayload = string | object | Buffer;
+
+  /**
+   * Signs a JWT using crypto options stored in the config.
+   */
+  export async function signJWT(subject: string, payload?: JWTPayload): Promise<string> {
+    const config = await Config.getConfig();
+    const algorithm: string = config.jwt.algorithm;
+
+    let realPayload: JWTPayload;
+    if (payload == null) {
+      realPayload = {};
+    } else {
+      realPayload = payload;
+    }
+
+    return jwt.sign(realPayload, config.jwt.keys[algorithm].private, {
+      subject, algorithm,
+      audience: config.jwt.audience,
+      issuer: config.jwt.issuer,
+      expiresIn: config.jwt.expiration,
+    });
+  }
+
+  /**
+   * Verifies a JWT using crypto options stored in the config.
+   */
+  export async function verifyJWT(token: string): Promise<string | object> {
+    const config = await Config.getConfig();
+    const algorithm: string = config.jwt.algorithm;
+
+    return jwt.verify(token, config.jwt.keys[algorithm].public, {
+      audience: config.jwt.audience,
+      issuer: config.jwt.issuer,
+      algorithms: [algorithm],
+    });
+  }
+}
+
+export namespace Config {
+  /**
+   * Imports the config file async. This is useful for most methods that will
+   * need to read the config at runtime.
+   */
+  export async function getConfig(): Promise<any> {
+    return await import('./config');
   }
 }

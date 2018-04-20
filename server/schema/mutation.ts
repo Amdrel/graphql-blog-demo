@@ -7,7 +7,7 @@ import {
   GraphQLString,
 } from 'graphql';
 
-import { User, RegisterUser } from './user';
+import { RegisterUser } from './user';
 
 // tslint:disable-next-line
 const Mutation = new GraphQLObjectType({
