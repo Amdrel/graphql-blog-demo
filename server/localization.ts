@@ -24,13 +24,16 @@ const translations: Translations = {
     'en': `The specified email isn't a valid email address.`,
   },
   'InvalidEmailLength': {
-    'en': (args: any) => `Email must be between ${args.min} and ${args.max} chatacters long.`,
+    'en': (args: any) => `Email must be between ${args.min} and ${args.max} characters long.`,
   },
   'InvalidNameLength': {
-    'en': (args: any) => `Name must be between ${args.min} and ${args.max} chatacters long.`,
+    'en': (args: any) => `Name must be between ${args.min} and ${args.max} characters long.`,
   },
   'InvalidPasswordLength': {
     'en': (args: any) => `Password must be at least ${args.min} chatacters long.`,
+  },
+  'InvalidAuthorizationInfo': {
+    'en': `Email or password is incorrect.`,
   },
 };
 

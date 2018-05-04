@@ -3,6 +3,7 @@ import * as KoaRouter from 'koa-router';
 import * as graphqlHTTP from 'koa-graphql';
 import * as koaConvert from 'koa-convert';
 import * as koaStatic from 'koa-static';
+import * as middleware from './server/middleware';
 import * as path from 'path';
 import defaultSchema from './server/schema';
 import graphiql from 'koa-custom-graphiql';
@@ -18,7 +19,17 @@ router.post('/graphql', koaConvert(graphqlHTTP({
   schema: defaultSchema,
 
   formatError: (e: GraphQLError) => {
+    // Catch custom errors (which are all safe to display).
     if (e.originalError instanceof UserError) {
+      return e;
+    }
+
+    // GraphQL errors are not very informative in which errors are safe to show
+    // to the client and which one aren't. What follows is some edge cases that
+    // will let certain validation errors leak through to ease frontend
+    // development.
+    if (e.message.includes('Field "') &&
+        e.message.includes('" is not defined by type ')) {
       return e;
     }
 
@@ -31,6 +42,7 @@ router.post('/graphql', koaConvert(graphqlHTTP({
 
 router.redirect('/', '/graphql');
 
+app.use(middleware.jwt);
 app.use(router.routes());
 app.use(router.allowedMethods());
 

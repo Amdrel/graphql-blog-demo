@@ -110,7 +110,7 @@ const RegisterUser = mutationWithClientMutationId({
     },
     password: {
       type: new GraphQLNonNull(GraphQLString),
-      description: `The user's unhashed name (hashed in storage).`,
+      description: `The user's unhashed password (hashed in storage).`,
     },
   },
 
@@ -174,30 +174,99 @@ const RegisterUser = mutationWithClientMutationId({
       password: hashedPassword,
     };
 
-    try {
-      return await knex.transaction(async (tx) => {
-        // Check email using an extra SELECT to avoid incrementing the SERIAL
-        // sequence with repeated failed attempts.
-        const emailResults = await knex('users')
-          .select(knex.raw(1))
-          .where({ email: args.email });
-        if (emailResults.length > 0) {
-          throw new ValidationError(getLocaleString('EmailClaimedError', context));
-        }
-
-        // Register the account and return the id so join monster can query the
-        // new account details and deliver them to the client.
-        const id = await knex('users')
-          .insert(data)
-          .returning('id');
-        return { userId: id[0] };
-      });
-    } catch (e) {
-      if (e instanceof UserError) {
-        throw e;
+    return await knex.transaction(async (tx) => {
+      // Check email using an extra SELECT to avoid incrementing the SERIAL
+      // sequence with repeated failed attempts.
+      const emailResults = await knex('users')
+        .select(knex.raw(1))
+        .where({ email: args.email, deleted_at: null });
+      if (emailResults.length > 0) {
+        throw new ValidationError(getLocaleString('EmailClaimedError', context));
       }
-      throw new Error(getLocaleString(`InternalError`, context));
+
+      // Register the account and return the id so join monster can query the
+      // new account details and deliver them to the client.
+      const id = await knex('users').insert(data).returning('id');
+
+      return { userId: id[0] };
+    });
+  },
+});
+
+// tslint:disable-next-line
+const AuthenticateUser = mutationWithClientMutationId({
+  name: 'AuthenticateUser',
+
+  inputFields: {
+    email: {
+      type: new GraphQLNonNull(GraphQLString),
+      description: `The user's email address.`,
+    },
+    password: {
+      type: new GraphQLNonNull(GraphQLString),
+      description: `The user's unhashed password (hashed in storage).`,
+    },
+  },
+
+  outputFields: {
+    user: {
+      type: User,
+
+      resolve: (payload, args, context, resolveInfo) => {
+        const dbCall = (sql: string) => {
+          return fetch(sql, { id: payload.userId }, context);
+        };
+        return joinMonster(resolveInfo, context, dbCall, joinMonsterOptions);
+      },
+    },
+
+    jwtToken: {
+      type: JWTToken,
+
+      resolve: (payload, args, context, resolveInfo) => {
+        return payload;
+      },
+    },
+  },
+
+  mutateAndGetPayload: async (args, context, resolveInfo): Promise<any> => {
+    if (!validator.isLength(args.email, { min: 6, max: 190 })) {
+      throw new ValidationError(getLocaleString('InvalidEmailLength', context, {
+        min: 6,
+        max: 190,
+      }));
     }
+    if (!validator.isEmail(args.email)) {
+      throw new ValidationError(getLocaleString('InvalidEmail', context));
+    }
+
+    // No funky special character nonsense. Upper bound on password prevents
+    // DoS: http://permalink.gmane.org/gmane.comp.python.django.devel/39831
+    if (!validator.isLength(args.password, { min: 8, max: 190 })) {
+      throw new ValidationError(getLocaleString('InvalidPasswordLength', context, {
+        min: 8,
+        max: 4096,
+      }));
+    }
+
+    return await knex.transaction(async (tx) => {
+      // Check email using an extra SELECT to avoid incrementing the SERIAL
+      // sequence with repeated failed attempts.
+      const emailResults = await knex('users')
+        .select('id', 'password')
+        .where({ email: args.email, deleted_at: null });
+      if (emailResults.length <= 0) {
+        throw new ValidationError(getLocaleString('InvalidAuthorizationInfo', context));
+      }
+
+      const user = emailResults[0];
+      const verified = await argon2.verify(user.password, args.password);
+      if (!verified) {
+        throw new ValidationError(getLocaleString('InvalidAuthorizationInfo', context));
+      }
+
+      return { userId: user.id };
+    });
   },
 });
 
@@ -206,4 +275,4 @@ const { connectionType: UserConnection } = connectionDefinitions({
   nodeType: User,
 });
 
-export { User, UserConnection, RegisterUser };
+export { User, UserConnection, RegisterUser, AuthenticateUser };
