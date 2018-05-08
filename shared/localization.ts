@@ -38,6 +38,9 @@ const translations: Translations = {
   'InvalidPermissionString': {
     'en': `The permissions provided is invalid (no leading dots, trailing dots, or double dots).`,
   },
+  'FieldAccessUnauthorized': {
+    'en': (args: any) => `You're not authorized to access field '${args.fieldName}'.`,
+  },
 };
 
 /**

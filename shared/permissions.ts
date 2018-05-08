@@ -11,7 +11,7 @@ export class Permission {
 
   /**
    * Constructs a permissions object from a dot delimited string.
-   * @param permission - A string representation of the permission.
+   * @param permission A string representation of the permission.
    */
   constructor(permission: string) {
     if (!permissionRegex.test(permission)) {
@@ -29,7 +29,7 @@ export class Permission {
    * top.mid     = top.mid.low
    * other.top   ≠ top.mid.low
    *
-   * @param permission - Another permission to compare to.
+   * @param permission Another permission to compare to.
    */
   match(permission: Permission): boolean {
     const length = Math.min(this.nodes.length, permission.nodes.length);

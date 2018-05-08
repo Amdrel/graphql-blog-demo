@@ -2,6 +2,12 @@ import * as GraphQLHashIdType from 'graphql-hashid-type';
 import * as HashidsObject from 'hashids';
 import * as jwt from 'jsonwebtoken';
 import { Permission } from '../shared/permissions';
+import { PermissionError } from './errors';
+import { getLocaleString } from '../shared/localization';
+
+// Config isn't imported in this file to prevent circular depdency issues (the
+// config loader uses environment functions contained here). You'll see requires
+// and imports in a few places for the config.
 
 let graphQLHashIdInstance: any;
 
@@ -131,10 +137,10 @@ export namespace Permissions {
   /**
    * Queries the database for permissions a user has for their assigned roles.
    *
-   * @param userId - Primary key of a user to get permissions for.
+   * @param userId Primary key of a user to get permissions for.
    */
   export async function getUserPermissions(userId: number): Promise<string[]> {
-    const knex = await import ('./database');
+    const knex = await import('./database');
 
     const permissions = await knex('user_roles')
       .distinct('role_permissions.permission')
@@ -149,6 +155,78 @@ export namespace Permissions {
     return permissions.map((permission: any) => {
       return new Permission(permission.permission).stringify();
     });
+  }
+
+  /**
+   * GraphQL resolver-level middleware that runs the provided callback if the
+   * authenticated user has permission to access the field.
+   *
+   * @param cb Actual resolve function to call if permissions check out.
+   * @param ctx Koa context object that contains the JWT (ctx.state).
+   * @param fieldName Human-readable name for the field for error reporting.
+   * @param permissions Permissions that can allow resolving the field.
+   */
+  export function resolveWithPermissions(
+      cb: Function, ctx: any, fieldName: string, ...permissions: string[]): any {
+    if (Permissions.checkPermissions(ctx, ...permissions)) {
+      return cb();
+    } else {
+      throw new PermissionError(getLocaleString('FieldAccessUnauthorized', ctx, { fieldName }));
+    }
+  }
+
+  /**
+   * Checks the JWT in the passed Koa context object and returns true if any of
+   * the required permissions are satisfied.
+   *
+   * @param ctx Koa context object that contains the JWT (ctx.state).
+   * @param permissions Permissions to test against.
+   */
+  export function checkPermissions(ctx: any, ...permissions: string[]): boolean {
+    if (!ctx.state.authenticated) {
+      return false;
+    }
+
+    let tokenPermissions: string[];
+    if (ctx.state.jwtToken.permissions == null) {
+      tokenPermissions = [];
+    } else {
+      tokenPermissions = ctx.state.jwtToken.permissions;
+    }
+
+    const parsedPermissions = permissions.map(p => new Permission(p));
+    const parsedTokenPermissions = tokenPermissions.map(p => new Permission(p));
+
+    for (const fieldPermission of parsedPermissions) {
+      for (const tokenPermission of parsedTokenPermissions) {
+        if (fieldPermission.match(tokenPermission)) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  /**
+   * Checks the sub of the passed JWT and compares it to a user id. This allows
+   * for easy ownership checking in resolve functions and mutations.
+   *
+   * @param ctx Koa context object that contains the JWT (ctx.state).
+   * @param userId User id to test direct ownership against.
+   */
+  export function isOwner(ctx: any, userId: number): boolean {
+    // The config is imported synchronously as this function is likely to be
+    // called in a tight loop.
+    const config = require('./config');
+
+    if (!ctx.state.authenticated) {
+      return false;
+    }
+
+    const ids = Hashids.build(config).decode(ctx.state.jwtToken.sub);
+
+    return ids.length > 0 && ids[0] === userId;
   }
 }
 

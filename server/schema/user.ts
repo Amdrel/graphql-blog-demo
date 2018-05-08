@@ -21,7 +21,7 @@ import * as knex from '../database';
 import * as validator from 'validator';
 import fetch from './fetch';
 import joinMonster from 'join-monster';
-import { Hashids } from '../utils';
+import { Hashids, Permissions } from '../utils';
 import { JWTToken } from './jwt-token';
 import { Post, PostConnection } from './post';
 import { UserError, ValidationError } from '../errors';
@@ -53,7 +53,13 @@ const User = new GraphQLObjectType({
       type: GraphQLString,
 
       resolve: (user: any, args: any, ctx: any) => {
-        return `${user.email}`;
+        const resolve = () => `${user.email}`;
+
+        if (Permissions.isOwner(ctx, user.id)) {
+          return resolve();
+        } else {
+          return Permissions.resolveWithPermissions(resolve, ctx, 'email', 'blog.users.get');
+        }
       },
     },
     fullName: {
@@ -61,21 +67,27 @@ const User = new GraphQLObjectType({
       sqlColumn: 'full_name',
       type: GraphQLString,
 
-      resolve: (user: any) => `${user.fullName}`,
+      resolve: (user: any, args: any, ctx: any) => {
+        return `${user.fullName}`;
+      },
     },
     firstName: {
       description: `A user's first name.`,
       sqlColumn: 'first_name',
       type: GraphQLString,
 
-      resolve: (user: any) => `${user.firstName}`,
+      resolve: (user: any, args: any, ctx: any) => {
+        return `${user.firstName}`;
+      },
     },
     lastName: {
       description: `A user's last name.`,
       sqlColumn: 'last_name',
       type: GraphQLString,
 
-      resolve: (user: any) => `${user.lastName}`,
+      resolve: (user: any, args: any, ctx: any) => {
+        return `${user.lastName}`;
+      },
     },
     posts: {
       description: 'A list of posts the user has written.',

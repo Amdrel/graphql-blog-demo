@@ -13,3 +13,10 @@ export class ValidationError extends UserError {
     this.name = 'ValidationError';
   }
 }
+
+export class PermissionError extends UserError {
+  constructor(...args: any[]) {
+    super(...args);
+    this.name = 'PermissionError';
+  }
+}
