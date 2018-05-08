@@ -10,7 +10,7 @@ import graphiql from 'koa-custom-graphiql';
 import { Environment } from './server/utils';
 import { GraphQLError } from 'graphql';
 import { UserError, ValidationError } from './server/errors';
-import { getLocaleString } from './server/localization';
+import { getLocaleString } from './shared/localization';
 
 const app = new Koa();
 const router = new KoaRouter();
@@ -28,8 +28,14 @@ router.post('/graphql', koaConvert(graphqlHTTP({
     // to the client and which one aren't. What follows is some edge cases that
     // will let certain validation errors leak through to ease frontend
     // development.
-    if (e.message.includes('Field "') &&
-        e.message.includes('" is not defined by type ')) {
+    // if (e.message.includes('Field "') &&
+    //     e.message.includes('" is not defined by type ')) {
+    //   return e;
+    // }
+
+    // This should return GraphQL errors to the client that -don't- include
+    // actual internal server errors.
+    if (e.originalError == null) {
       return e;
     }
 

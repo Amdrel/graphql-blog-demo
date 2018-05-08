@@ -25,7 +25,7 @@ import { Hashids } from '../utils';
 import { JWTToken } from './jwt-token';
 import { Post, PostConnection } from './post';
 import { UserError, ValidationError } from '../errors';
-import { getLocaleString } from '../localization';
+import { getLocaleString } from '../../shared/localization';
 import { parseFullName } from 'parse-full-name';
 
 // tslint:disable-next-line

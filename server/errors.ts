@@ -1,5 +1,3 @@
-export const isUserError = Symbol();
-
 export class UserError extends Error {
   constructor(...args: any[]) {
     super(...args);

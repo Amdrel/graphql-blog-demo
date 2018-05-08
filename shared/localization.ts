@@ -35,6 +35,9 @@ const translations: Translations = {
   'InvalidAuthorizationInfo': {
     'en': `Email or password is incorrect.`,
   },
+  'InvalidPermissionString': {
+    'en': `The permissions provided is invalid (no leading dots, trailing dots, or double dots).`,
+  },
 };
 
 /**
@@ -42,7 +45,7 @@ const translations: Translations = {
  * @param string
  * @param locale
  */
-export function getLocaleString(string: string, context: any, args?: any): string {
+export function getLocaleString(string: string, context?: any, args?: any): string {
   if (!(string in translations)) {
     throw new Error(`Unsupported translation string requested.`);
   }
