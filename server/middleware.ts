@@ -12,7 +12,8 @@ export async function jwt(ctx: any, next: Function) {
     ctx.state.authorized = true;
     ctx.state.jwtToken = parsedToken;
   } catch (e) {
-    ctx.throw(401, e.message);
+    ctx.state.authorized = false;
+    ctx.state.jwtError = e.message;
   }
 
   await next();

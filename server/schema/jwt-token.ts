@@ -12,7 +12,8 @@ import {
 import * as config from '../config';
 import fetch from './fetch';
 import joinMonster from 'join-monster';
-import { Hashids, Crypto } from '../utils';
+import { Hashids, Crypto, Permissions } from '../utils';
+import { Permission } from '../../shared/permissions';
 
 // tslint:disable-next-line
 const GraphQLHashId = Hashids.getGraphQLHashId();
@@ -30,7 +31,9 @@ const JWTToken = new GraphQLObjectType({
 
       resolve: async (payload: any) => {
         const subject = Hashids.build(config).encode(payload.userId);
-        return Crypto.signJWT(subject);
+        const permissions = await Permissions.getUserPermissions(payload.userId);
+
+        return Crypto.signJWT(subject, { permissions });
       },
     },
   }),

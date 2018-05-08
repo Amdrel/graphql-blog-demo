@@ -24,17 +24,12 @@ router.post('/graphql', koaConvert(graphqlHTTP({
       return e;
     }
 
-    // GraphQL errors are not very informative in which errors are safe to show
-    // to the client and which one aren't. What follows is some edge cases that
-    // will let certain validation errors leak through to ease frontend
-    // development.
-    // if (e.message.includes('Field "') &&
-    //     e.message.includes('" is not defined by type ')) {
-    //   return e;
-    // }
-
     // This should return GraphQL errors to the client that -don't- include
-    // actual internal server errors.
+    // actual internal server errors. GraphQL errors are not very informative in
+    // which errors are safe to show to the client and which one aren't.
+    //
+    // The best we have to go by is checking if another error was thrown that
+    // caused the GraphQL error we received.
     if (e.originalError == null) {
       return e;
     }

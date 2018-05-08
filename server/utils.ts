@@ -1,6 +1,7 @@
 import * as GraphQLHashIdType from 'graphql-hashid-type';
 import * as HashidsObject from 'hashids';
 import * as jwt from 'jsonwebtoken';
+import { Permission } from '../shared/permissions';
 
 let graphQLHashIdInstance: any;
 
@@ -122,6 +123,31 @@ export namespace Crypto {
       audience: config.jwt.audience,
       issuer: config.jwt.issuer,
       algorithms: [algorithm],
+    });
+  }
+}
+
+export namespace Permissions {
+  /**
+   * Queries the database for permissions a user has for their assigned roles.
+   *
+   * @param userId - Primary key of a user to get permissions for.
+   */
+  export async function getUserPermissions(userId: number): Promise<string[]> {
+    const knex = await import ('./database');
+
+    const permissions = await knex('user_roles')
+      .distinct('role_permissions.permission')
+      .select()
+      .innerJoin('roles', 'roles.id', 'user_roles.role_id')
+      .innerJoin('role_permissions', 'role_permissions.role_id', 'roles.id')
+      .where('user_roles.user_id', '=', userId)
+      .orderBy('role_permissions.permission');
+
+    // Permissions are transformed from string -> Permission -> string so that
+    // validation is run on permissions retrieved from the database.
+    return permissions.map((permission: any) => {
+      return new Permission(permission.permission).stringify();
     });
   }
 }

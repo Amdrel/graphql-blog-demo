@@ -52,7 +52,9 @@ const User = new GraphQLObjectType({
       sqlColumn: 'email',
       type: GraphQLString,
 
-      resolve: (user: any) => `${user.email}`,
+      resolve: (user: any, args: any, ctx: any) => {
+        return `${user.email}`;
+      },
     },
     fullName: {
       description: `A user's full name.`,

@@ -39,13 +39,13 @@ describe('shared functions used by client and server', () => {
       assert.isTrue(permission1.match(permission2));
     });
 
-    it('should match literal permissions have less terms', () => {
+    it('should match literal permissions that have less terms', () => {
       const permission1 = new Permission('top.mid.low');
       const permission2 = new Permission('top.mid');
       assert.isTrue(permission1.match(permission2));
     });
 
-    it('should not match literal permissions mismatched terms', () => {
+    it('should not match literal permissions with mismatched terms', () => {
       const permission1 = new Permission('top.mid.low');
       const permission2 = new Permission('topper.top.mid.low');
       assert.isFalse(permission1.match(permission2));
@@ -58,6 +58,14 @@ describe('shared functions used by client and server', () => {
       const permission1 = new Permission('top.mid.low');
       const permission2 = new Permission('');
       assert.isFalse(permission1.match(permission2));
+    });
+
+    it('should stringify back to its source string', () => {
+      const permission1 = new Permission('top.mid.low');
+      expect(permission1.stringify()).to.equal('top.mid.low');
+
+      const permission2 = new Permission('top');
+      expect(permission2.stringify()).to.equal('top');
     });
   });
 });

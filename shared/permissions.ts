@@ -9,6 +9,10 @@ const permissionRegex = /^([^\.]|([^\.])\.[^\.])*$/;
 export class Permission {
   nodes: string[];
 
+  /**
+   * Constructs a permissions object from a dot delimited string.
+   * @param permission - A string representation of the permission.
+   */
   constructor(permission: string) {
     if (!permissionRegex.test(permission)) {
       throw new Error(getLocaleString('InvalidPermissionString'));
@@ -25,7 +29,7 @@ export class Permission {
    * top.mid     = top.mid.low
    * other.top   ≠ top.mid.low
    *
-   * @param permission
+   * @param permission - Another permission to compare to.
    */
   match(permission: Permission): boolean {
     const length = Math.min(this.nodes.length, permission.nodes.length);
@@ -37,5 +41,13 @@ export class Permission {
     }
 
     return true;
+  }
+
+  /**
+   * Returns a string representation of the permission. This is useful for
+   * serialization (as is done in our JWT creation code).
+   */
+  stringify(): string {
+    return this.nodes.join('.');
   }
 }
