@@ -1,9 +1,13 @@
 {
   "defaultSeverity": "error",
-  "extends": "tslint-config-airbnb",
+  "extends": [
+    "tslint-eslint-rules",
+    "tslint-config-airbnb"
+  ],
   "jsRules": {},
   "rules": {
     "eofline": true,
+    "ter-padded-blocks": [true, "never"],
     "import-name": false,
     "no-unused-variable": true,
     "no-else-after-return": ["error", { "allowElseIf": true }]
