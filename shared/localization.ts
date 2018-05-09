@@ -35,11 +35,23 @@ const translations: Translations = {
   'InvalidAuthorizationInfo': {
     'en': `Email or password is incorrect.`,
   },
+  'PasswordDoesntMatch': {
+    'en': `The old password provided doesn't match your current password.`,
+  },
+  'EditUserDoesntExist': {
+    'en': `The user you're trying to edit doesn't exist.`,
+  },
   'InvalidPermissionString': {
     'en': `The permissions provided is invalid (no leading dots, trailing dots, or double dots).`,
   },
   'FieldAccessUnauthorized': {
     'en': (args: any) => `You're not authorized to access field '${args.fieldName}'.`,
+  },
+  'EditUnauthorized': {
+    'en': `You're not authorized to edit this resource.`,
+  },
+  'DeleteUnauthorized': {
+    'en': `You're not authorized to delete this resource.`,
   },
 };
 

@@ -10,6 +10,8 @@ import {
 import {
   RegisterUser,
   AuthenticateUser,
+  EditUser,
+  // DeleteUser,
 } from './user';
 
 // tslint:disable-next-line
@@ -20,8 +22,8 @@ const Mutation = new GraphQLObjectType({
   fields: () => ({
     registerUser: RegisterUser,
     authenticateUser: AuthenticateUser,
+    editUser: EditUser,
     // deleteUser: DeleteUser,
-    // editUser: EditUser,
   }),
 });
 

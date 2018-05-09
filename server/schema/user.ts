@@ -21,10 +21,10 @@ import * as knex from '../database';
 import * as validator from 'validator';
 import fetch from './fetch';
 import joinMonster from 'join-monster';
-import { Hashids, Permissions } from '../utils';
+import { Hashids, Permissions, Utils } from '../utils';
 import { JWTToken } from './jwt-token';
 import { Post, PostConnection } from './post';
-import { UserError, ValidationError } from '../errors';
+import { UserError, ValidationError, PermissionError } from '../errors';
 import { getLocaleString } from '../../shared/localization';
 import { parseFullName } from 'parse-full-name';
 
@@ -138,6 +138,10 @@ const RegisterUser = mutationWithClientMutationId({
         };
         return joinMonster(resolveInfo, context, dbCall, joinMonsterOptions);
       },
+
+      where: (users: string, args: any, context: any) => {
+        return `${users}.id = :id AND ${users}.deleted_at IS NULL`;
+      },
     },
 
     jwtToken: {
@@ -166,7 +170,7 @@ const RegisterUser = mutationWithClientMutationId({
         max: 190,
       }));
     }
-    const fullName = parseFullName(args.fullName);
+    const fullName = parseFullName(args.fullName.trim());
 
     // No funky special character nonsense. Upper bound on password prevents
     // DoS: http://permalink.gmane.org/gmane.comp.python.django.devel/39831
@@ -182,7 +186,7 @@ const RegisterUser = mutationWithClientMutationId({
 
     const data = {
       email: args.email,
-      full_name: args.fullName,
+      full_name: Utils.stringifyFullName(fullName),
       first_name: fullName.first,
       last_name: fullName.last,
       password: hashedPassword,
@@ -193,7 +197,8 @@ const RegisterUser = mutationWithClientMutationId({
       // sequence with repeated failed attempts.
       const emailResults = await knex('users')
         .select(knex.raw(1))
-        .where({ email: args.email, deleted_at: null });
+        .where({ email: args.email, deleted_at: null })
+        .limit(1);
       if (emailResults.length > 0) {
         throw new ValidationError(getLocaleString('EmailClaimedError', context));
       }
@@ -232,6 +237,10 @@ const AuthenticateUser = mutationWithClientMutationId({
         };
         return joinMonster(resolveInfo, context, dbCall, joinMonsterOptions);
       },
+
+      where: (users: string, args: any, context: any) => {
+        return `${users}.id = :id AND ${users}.deleted_at IS NULL`;
+      },
     },
 
     jwtToken: {
@@ -268,7 +277,8 @@ const AuthenticateUser = mutationWithClientMutationId({
       // sequence with repeated failed attempts.
       const emailResults = await knex('users')
         .select('id', 'password')
-        .where({ email: args.email, deleted_at: null });
+        .where({ email: args.email, deleted_at: null })
+        .limit(1);
       if (emailResults.length <= 0) {
         throw new ValidationError(getLocaleString('InvalidAuthorizationInfo', context));
       }
@@ -285,8 +295,122 @@ const AuthenticateUser = mutationWithClientMutationId({
 });
 
 // tslint:disable-next-line
+const EditUser = mutationWithClientMutationId({
+  name: 'EditUser',
+
+  inputFields: {
+    id: {
+      type: new GraphQLNonNull(GraphQLHashId),
+      description: `Unique id of the user to edit.`,
+    },
+    fullName: {
+      type: GraphQLString,
+      description: `The user's full name.`,
+    },
+    oldPassword: {
+      type: GraphQLString,
+      description: `The user's old unhashed password.`,
+    },
+    newPassword: {
+      type: GraphQLString,
+      description: `The user's new unhashed password.`,
+    },
+  },
+
+  outputFields: {
+    user: {
+      type: User,
+
+      resolve: (payload, args, context, resolveInfo) => {
+        const dbCall = (sql: string) => {
+          return fetch(sql, { id: payload.userId }, context);
+        };
+        return joinMonster(resolveInfo, context, dbCall, joinMonsterOptions);
+      },
+
+      where: (users: string, args: any, context: any) => {
+        return `${users}.id = :id AND ${users}.deleted_at IS NULL`;
+      },
+    },
+  },
+
+  mutateAndGetPayload: async (args, context, resolveInfo): Promise<any> => {
+    // FIXME: Change validation logic so it may be reused between different
+    // mutations. It would also be nice to add an error type that can be queried
+    // on mutations so we can get field-level error messages.
+
+    const data: any = {};
+
+    if (!(Permissions.isOwner(context, args.id) ||
+        Permissions.checkPermissions(context, 'blog.users.edit'))) {
+      throw new PermissionError(getLocaleString('EditUnauthorized', context));
+    }
+
+    if (args.fullName != null) {
+      if (!validator.isLength(args.fullName, { min: 4, max: 190 })) {
+        throw new ValidationError(getLocaleString('InvalidNameLength', context, {
+          min: 4,
+          max: 190,
+        }));
+      }
+
+      const fullName = parseFullName(args.fullName.trim());
+      data.full_name = Utils.stringifyFullName(fullName);
+      data.first_name = fullName.first;
+      data.last_name = fullName.last;
+    }
+
+    // No funky special character nonsense. Upper bound on password prevents
+    // DoS: http://permalink.gmane.org/gmane.comp.python.django.devel/39831
+    if (args.oldPassword != null || args.newPassword != null) {
+      if (!validator.isLength(args.oldPassword, { min: 8, max: 190 })) {
+        throw new ValidationError(getLocaleString('InvalidPasswordLength', context, {
+          min: 8,
+          max: 4096,
+        }));
+      }
+      if (!validator.isLength(args.newPassword, { min: 8, max: 190 })) {
+        throw new ValidationError(getLocaleString('InvalidPasswordLength', context, {
+          min: 8,
+          max: 4096,
+        }));
+      }
+      data.password = await argon2.hash(args.newPassword, {
+        type: argon2.argon2id,
+      });
+    }
+
+    return await knex.transaction(async (tx) => {
+      const userResults = await knex('users')
+        .select('id', 'password')
+        .where({ id: args.id, deleted_at: null })
+        .limit(1);
+      if (userResults.length <= 0) {
+        throw new ValidationError(getLocaleString('EditUserDoesntExist', context));
+      }
+
+      const user = userResults[0];
+      const verified = await argon2.verify(user.password, args.oldPassword);
+      if (!verified) {
+        throw new ValidationError(getLocaleString('PasswordDoesntMatch', context));
+      }
+
+      await knex('users').update(data).where({ id: user.id });
+
+      return { userId: user.id };
+    });
+  },
+});
+
+// tslint:disable-next-line
 const { connectionType: UserConnection } = connectionDefinitions({
   nodeType: User,
 });
 
-export { User, UserConnection, RegisterUser, AuthenticateUser };
+export {
+  User,
+  UserConnection,
+  RegisterUser,
+  AuthenticateUser,
+  EditUser,
+};

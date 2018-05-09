@@ -239,3 +239,22 @@ export namespace Config {
     return await import('./config');
   }
 }
+
+export namespace Utils {
+  /**
+   * Converts a parse-full-name object into a full name string. Unfortunately
+   * the library doesn't provide this function itself.
+   *
+   * @param fullName Full name object from parse-full-name.
+   */
+  export function stringifyFullName(fullName: any): string {
+    const fragments = [
+      fullName.title, fullName.first, fullName.middle, fullName.last,
+      fullName.nick, fullName.suffix];
+
+    return fragments
+      .filter(fragment => fragment !== '' && /\S/.test(fragment))
+      .map(fragment => fragment.trim())
+      .join(' ');
+  }
+}
