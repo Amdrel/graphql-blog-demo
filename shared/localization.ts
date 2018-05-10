@@ -38,6 +38,9 @@ const translations: Translations = {
   'PasswordDoesntMatch': {
     'en': `The old password provided doesn't match your current password.`,
   },
+  'PasswordRequired': {
+    'en': `A password is required.`,
+  },
   'EditUserDoesntExist': {
     'en': `The user you're trying to edit doesn't exist.`,
   },

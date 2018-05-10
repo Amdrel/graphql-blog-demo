@@ -174,7 +174,7 @@ const RegisterUser = mutationWithClientMutationId({
 
     // No funky special character nonsense. Upper bound on password prevents
     // DoS: http://permalink.gmane.org/gmane.comp.python.django.devel/39831
-    if (!validator.isLength(args.password, { min: 8, max: 190 })) {
+    if (!validator.isLength(args.password, { min: 8, max: 4096 })) {
       throw new ValidationError(getLocaleString('InvalidPasswordLength', context, {
         min: 8,
         max: 4096,
@@ -195,7 +195,7 @@ const RegisterUser = mutationWithClientMutationId({
     return await knex.transaction(async (tx) => {
       // Check email using an extra SELECT to avoid incrementing the SERIAL
       // sequence with repeated failed attempts.
-      const emailResults = await knex('users')
+      const emailResults = await tx('users')
         .select(knex.raw(1))
         .where({ email: args.email, deleted_at: null })
         .limit(1);
@@ -205,7 +205,7 @@ const RegisterUser = mutationWithClientMutationId({
 
       // Register the account and return the id so join monster can query the
       // new account details and deliver them to the client.
-      const id = await knex('users').insert(data).returning('id');
+      const id = await tx('users').insert(data).returning('id');
 
       return { userId: id[0] };
     });
@@ -265,7 +265,7 @@ const AuthenticateUser = mutationWithClientMutationId({
 
     // No funky special character nonsense. Upper bound on password prevents
     // DoS: http://permalink.gmane.org/gmane.comp.python.django.devel/39831
-    if (!validator.isLength(args.password, { min: 8, max: 190 })) {
+    if (!validator.isLength(args.password, { min: 8, max: 4096 })) {
       throw new ValidationError(getLocaleString('InvalidPasswordLength', context, {
         min: 8,
         max: 4096,
@@ -275,7 +275,7 @@ const AuthenticateUser = mutationWithClientMutationId({
     return await knex.transaction(async (tx) => {
       // Check email using an extra SELECT to avoid incrementing the SERIAL
       // sequence with repeated failed attempts.
-      const emailResults = await knex('users')
+      const emailResults = await tx('users')
         .select('id', 'password')
         .where({ email: args.email, deleted_at: null })
         .limit(1);
@@ -339,10 +339,13 @@ const EditUser = mutationWithClientMutationId({
     // mutations. It would also be nice to add an error type that can be queried
     // on mutations so we can get field-level error messages.
 
-    const data: any = {};
+    const data: any = {
+      updated_at: new Date().toISOString(),
+    };
 
-    if (!(Permissions.isOwner(context, args.id) ||
-        Permissions.checkPermissions(context, 'blog.users.edit'))) {
+    const owner = Permissions.isOwner(context, args.id);
+    const granted = Permissions.checkPermissions(context, 'blog.users.edit');
+    if (!owner && !granted) {
       throw new PermissionError(getLocaleString('EditUnauthorized', context));
     }
 
@@ -362,14 +365,16 @@ const EditUser = mutationWithClientMutationId({
 
     // No funky special character nonsense. Upper bound on password prevents
     // DoS: http://permalink.gmane.org/gmane.comp.python.django.devel/39831
-    if (args.oldPassword != null || args.newPassword != null) {
-      if (!validator.isLength(args.oldPassword, { min: 8, max: 190 })) {
+    if (args.oldPassword != null) {
+      if (!validator.isLength(args.oldPassword, { min: 8, max: 4096 })) {
         throw new ValidationError(getLocaleString('InvalidPasswordLength', context, {
           min: 8,
           max: 4096,
         }));
       }
-      if (!validator.isLength(args.newPassword, { min: 8, max: 190 })) {
+    }
+    if (args.newPassword != null) {
+      if (!validator.isLength(args.newPassword, { min: 8, max: 4096 })) {
         throw new ValidationError(getLocaleString('InvalidPasswordLength', context, {
           min: 8,
           max: 4096,
@@ -381,7 +386,7 @@ const EditUser = mutationWithClientMutationId({
     }
 
     return await knex.transaction(async (tx) => {
-      const userResults = await knex('users')
+      const userResults = await tx('users')
         .select('id', 'password')
         .where({ id: args.id, deleted_at: null })
         .limit(1);
@@ -390,14 +395,102 @@ const EditUser = mutationWithClientMutationId({
       }
 
       const user = userResults[0];
-      const verified = await argon2.verify(user.password, args.oldPassword);
-      if (!verified) {
-        throw new ValidationError(getLocaleString('PasswordDoesntMatch', context));
+
+      // Verify that the old password passed matches the current password on
+      // record. This check is only done if the user editing the resource
+      // doesn't have the user edit permission (this means they're editing their
+      // own profile).
+      //
+      // Users with the edit permission will be able to reset other users'
+      // passwords at their discretion.
+      if (!granted) {
+        if (args.oldPassword != null || args.newPassword != null) {
+          const verified = await argon2.verify(user.password, args.oldPassword);
+          if (!verified) {
+            throw new ValidationError(getLocaleString('PasswordDoesntMatch', context));
+          }
+        } else {
+          throw new ValidationError(getLocaleString('PasswordRequired'));
+        }
       }
 
-      await knex('users').update(data).where({ id: user.id });
+      await tx('users').update(data).where({ id: user.id });
 
       return { userId: user.id };
+    });
+  },
+});
+
+// tslint:disable-next-line
+const DeleteUser = mutationWithClientMutationId({
+  name: 'DeleteUser',
+
+  inputFields: {
+    id: {
+      type: new GraphQLNonNull(GraphQLHashId),
+      description: `Unique id of the user to edit.`,
+    },
+    password: {
+      type: GraphQLString,
+      description: `The user's old unhashed password.`,
+    },
+  },
+
+  outputFields: {},
+
+  mutateAndGetPayload: async (args, context, resolveInfo): Promise<any> => {
+    const owner = Permissions.isOwner(context, args.id);
+    const granted = Permissions.checkPermissions(context, 'blog.users.edit');
+    if (!owner && !granted) {
+      throw new PermissionError(getLocaleString('DeleteUnauthorized', context));
+    }
+
+    if (args.password != null) {
+      if (!validator.isLength(args.password, { min: 8, max: 4096 })) {
+        throw new ValidationError(getLocaleString('InvalidPasswordLength', context, {
+          min: 8,
+          max: 4096,
+        }));
+      }
+    }
+
+    return await knex.transaction(async (tx) => {
+      const userResults = await tx('users')
+        .select('id', 'password')
+        .where({ id: args.id, deleted_at: null })
+        .limit(1);
+      if (userResults.length <= 0) {
+        throw new ValidationError(getLocaleString('EditUserDoesntExist', context));
+      }
+
+      const user = userResults[0];
+
+      // Verify that the old password passed matches the current password on
+      // record. This check is only done if the user editing the resource
+      // doesn't have the user edit permission (this means they're editing their
+      // own profile).
+      //
+      // Users with the edit permission will be able to reset other users'
+      // passwords at their discretion.
+      if (!granted) {
+        if (args.password != null) {
+          const verified = await argon2.verify(user.password, args.oldPassword);
+          if (!verified) {
+            throw new ValidationError(getLocaleString('PasswordDoesntMatch', context));
+          }
+        } else {
+          throw new ValidationError(getLocaleString('PasswordRequired'));
+        }
+      }
+
+      const now = new Date().toISOString();
+
+      await tx('users').update({
+        deleted_at: now,
+        updated_at: now,
+      }).where({ id: user.id });
+
+      return {};
     });
   },
 });
@@ -413,4 +506,5 @@ export {
   RegisterUser,
   AuthenticateUser,
   EditUser,
+  DeleteUser,
 };
