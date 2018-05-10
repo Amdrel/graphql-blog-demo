@@ -7,7 +7,7 @@
   "license": "MIT",
   "scripts": {
     "start": "node ./dist/index.js",
-    "test": "mocha -r ts-node/register shared/**/test.ts server/**/test.ts"
+    "test": "mocha -r ts-node/register **/*.test.ts"
   },
   "devDependencies": {
     "chai": "^4.1.2",
