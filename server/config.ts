@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import * as process from 'process';
 import * as yaml from 'js-yaml';
 import { Environment } from './utils';
 
@@ -7,7 +8,7 @@ import { Environment } from './utils';
  * Reads the config file (yaml) and returns its contents as an object.
  */
 function readFullConfig(): any {
-  const configPath = path.join(__dirname, '../../config/config.yaml');
+  const configPath = path.join(process.cwd(), './config/config.yaml');
   const configContent = fs.readFileSync(configPath, 'utf-8');
 
   const config = yaml.safeLoad(configContent);

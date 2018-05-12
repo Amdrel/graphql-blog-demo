@@ -11,6 +11,7 @@ import { Environment } from './server/utils';
 import { GraphQLError } from 'graphql';
 import { UserError, ValidationError } from './server/errors';
 import { getLocaleString } from './shared/localization';
+import { logger } from './server/logging';
 
 const app = new Koa();
 const router = new KoaRouter();
@@ -34,7 +35,9 @@ router.post('/graphql', koaConvert(graphqlHTTP({
       return e;
     }
 
-    console.error(e.stack);
+    if (e.stack != null) {
+      logger.error(e.stack);
+    }
 
     e.message = getLocaleString('InternalError', null);
     return e;
@@ -63,5 +66,5 @@ if (env === Environment.DeploymentEnv.Development ||
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
-  console.log(`Listening on port '${port}'.`);
+  logger.info(`Listening on port '${port}'.`);
 });

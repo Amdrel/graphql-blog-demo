@@ -1,4 +1,4 @@
-import { expect, assert } from 'chai';
+import { expect } from 'chai';
 import { Permission } from './permissions';
 
 describe('shared functions used by client and server', () => {
@@ -36,28 +36,28 @@ describe('shared functions used by client and server', () => {
     it('should match literal permissions that match exactly', () => {
       const permission1 = new Permission('top.mid.low');
       const permission2 = new Permission('top.mid.low');
-      assert.isTrue(permission1.match(permission2));
+      expect(permission1.match(permission2)).to.be.true;
     });
 
     it('should match literal permissions that have less terms', () => {
       const permission1 = new Permission('top.mid.low');
       const permission2 = new Permission('top.mid');
-      assert.isTrue(permission1.match(permission2));
+      expect(permission1.match(permission2)).to.be.true;
     });
 
     it('should not match literal permissions with mismatched terms', () => {
       const permission1 = new Permission('top.mid.low');
       const permission2 = new Permission('topper.top.mid.low');
-      assert.isFalse(permission1.match(permission2));
+      expect(permission1.match(permission2)).to.be.false;
 
       const permission3 = new Permission('other.top');
-      assert.isFalse(permission1.match(permission3));
+      expect(permission1.match(permission3)).to.be.false;
     });
 
     it('should not match empty permissions', () => {
       const permission1 = new Permission('top.mid.low');
       const permission2 = new Permission('');
-      assert.isFalse(permission1.match(permission2));
+      expect(permission1.match(permission2)).to.be.false;
     });
 
     it('should stringify back to its source string', () => {
