@@ -1,0 +1,6 @@
+-u bdd
+--colors
+-r ts-node/register
+-r ./test/test.bootstrap.ts
+**/*.test.ts
+--exit

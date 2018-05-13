@@ -39,4 +39,8 @@ describe('user resource querying and mutations', () => {
       expect(User.getFields().posts.type).to.deep.equals(PostConnection);
     });
   });
+
+  describe('register an account and make profile edits', () => {
+
+  });
 });
