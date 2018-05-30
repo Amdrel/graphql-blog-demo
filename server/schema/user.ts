@@ -474,7 +474,7 @@ const DeleteUser = mutationWithClientMutationId({
       // passwords at their discretion.
       if (!granted) {
         if (args.password != null) {
-          const verified = await argon2.verify(user.password, args.oldPassword);
+          const verified = await argon2.verify(user.password, args.password);
           if (!verified) {
             throw new ValidationError(getLocaleString('PasswordDoesntMatch', context));
           }
