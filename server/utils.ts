@@ -241,16 +241,39 @@ export namespace Config {
 }
 
 export namespace Utils {
+  interface FullName {
+    title: string;
+    first: string;
+    middle: string;
+    last: string;
+    nick: string;
+    suffix: string;
+  }
+
   /**
    * Converts a parse-full-name object into a full name string. Unfortunately
    * the library doesn't provide this function itself.
    *
    * @param fullName Full name object from parse-full-name.
    */
-  export function stringifyFullName(fullName: any): string {
+  export function stringifyFullName(fullName: FullName): string {
     const fragments = [
       fullName.title, fullName.first, fullName.middle, fullName.last,
       fullName.nick, fullName.suffix];
+
+    return fragments
+      .filter(fragment => fragment !== '' && /\S/.test(fragment))
+      .map(fragment => fragment.trim())
+      .join(' ');
+  }
+
+  /**
+   * Similar to stringifyFullName, but without titles and other grandiose.
+   *
+   * @param fullName Full name object from parse-full-name.
+   */
+  export function stringifySimpleFullName(fullName: FullName): string {
+    const fragments = [fullName.first, fullName.last];
 
     return fragments
       .filter(fragment => fragment !== '' && /\S/.test(fragment))
