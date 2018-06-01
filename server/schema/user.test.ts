@@ -192,7 +192,7 @@ describe('user resource querying and mutations', () => {
       expect(user.id.length).to.equal(12);
     });
 
-    it(`should'nt be able to feed garbage data`, async () => {
+    it(`shouldn't be able to feed garbage data`, async () => {
       expect(userId).to.exist;
       expect(jwtString).to.exist;
       expect(jwt).to.exist;
