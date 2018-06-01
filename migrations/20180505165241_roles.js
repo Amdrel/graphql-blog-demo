@@ -22,13 +22,13 @@
 
 exports.up = async function(knex, Promise) {
   await knex.schema.createTable('roles', (table) => {
-    table.increments('id').notNull();
+    table.bigIncrements('id').notNull();
     table.string('name').notNull();
     table.timestamps(true, true);
   });
 
   await knex.schema.createTable('user_roles', (table) => {
-    table.increments('id').notNull();
+    table.bigIncrements('id').notNull();
     table.integer('user_id').notNull();
     table.integer('role_id').notNull();
     table.timestamps(true, true);
@@ -44,7 +44,7 @@ exports.up = async function(knex, Promise) {
   });
 
   await knex.schema.createTable('role_permissions', (table) => {
-    table.increments('id').notNull();
+    table.bigIncrements('id').notNull();
     table.integer('role_id').notNull();
     table.string('permission').notNull();
     table.timestamps(true, true);

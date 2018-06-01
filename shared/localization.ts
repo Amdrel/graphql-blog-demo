@@ -78,6 +78,9 @@ const translations: Translations = {
   'DeleteUnauthorized': {
     'en': `You're not authorized to delete this resource.`,
   },
+  'InvalidUserInfo': {
+    'en': `Invalid user information specified.`,
+  },
 };
 
 /**

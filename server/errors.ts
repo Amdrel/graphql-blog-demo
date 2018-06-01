@@ -29,10 +29,19 @@ export class UserError extends Error {
   }
 }
 
+interface ValidationErrorOptions {
+  message: string;
+  errors?: Error[];
+}
+
 export class ValidationError extends UserError {
-  constructor(...args: any[]) {
+  errors?: Error[];
+
+  constructor(options: ValidationErrorOptions, ...args: any[]) {
     super(...args);
     this.name = 'ValidationError';
+    this.message = options.message;
+    this.errors = options.errors;
   }
 }
 

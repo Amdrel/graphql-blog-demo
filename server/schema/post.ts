@@ -53,7 +53,7 @@ const Post: GraphQLObjectType = new GraphQLObjectType({
       sqlColumn: 'id',
       type: GraphQLHashId,
 
-      resolve: (post: any) => post.id,
+      resolve: (post: any) => parseInt(post.id, 10),
     },
     ownerId: {
       description: 'The owner ID hashid encoded.',

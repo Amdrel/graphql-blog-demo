@@ -46,7 +46,21 @@ router.post('/graphql', koaConvert(graphqlHTTP({
   formatError: (e: GraphQLError) => {
     // Catch custom errors (which are all safe to display).
     if (e.originalError instanceof UserError) {
-      return e;
+      let details: string[] | undefined;
+
+      if (e.originalError instanceof ValidationError) {
+        const errors = e.originalError.errors;
+        if (errors != null) {
+          details = errors.map(e => e.message);
+        }
+      }
+
+      return {
+        details,
+        message: e.message,
+        locations: e.locations,
+        path: e.path,
+      };
     }
 
     // This should return GraphQL errors to the client that -don't- include
@@ -64,7 +78,9 @@ router.post('/graphql', koaConvert(graphqlHTTP({
       logger.error(e.stack);
     }
 
+    // Replace the real error message with a user-friendly one.
     e.message = getLocaleString('InternalError', null);
+
     return e;
   },
 })));

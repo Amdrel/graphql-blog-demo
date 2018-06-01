@@ -192,6 +192,31 @@ describe('user resource querying and mutations', () => {
       expect(user.id.length).to.equal(12);
     });
 
+    it(`should'nt be able to feed garbage data`, async () => {
+      expect(userId).to.exist;
+      expect(jwtString).to.exist;
+      expect(jwt).to.exist;
+
+      const app = await getApp();
+      const response = await graphqlQuery(app, `
+        mutation($userId: Hashid!) {
+          editUser(input: {
+            id: $userId
+            fullName: "f"
+          }) {
+            user {
+              id
+              fullName
+              email
+            }
+          }
+        }
+      `, { userId }, jwtString);
+
+      expect(response.body).to.have.property('errors');
+      expect(response.body.errors.length).to.equal(1);
+    });
+
     it(`should not allow a password change when the old password is wrong`, async () => {
       expect(userId).to.exist;
       expect(jwtString).to.exist;

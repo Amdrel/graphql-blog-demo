@@ -48,7 +48,7 @@ const Comment: GraphQLObjectType = new GraphQLObjectType({
       sqlColumn: 'id',
       type: GraphQLHashId,
 
-      resolve: (comment: any) => comment.id,
+      resolve: (comment: any) => parseInt(comment.id, 10),
     },
     ownerId: {
       description: 'The owner ID hashid encoded.',

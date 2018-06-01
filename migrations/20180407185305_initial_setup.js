@@ -22,7 +22,7 @@
 
 exports.up = async function(knex, Promise) {
   await knex.schema.createTable('users', (table) => {
-    table.increments('id').notNull();
+    table.bigIncrements('id').notNull();
     table.string('email').notNull();
     table.string('full_name').notNull();
     table.string('first_name').notNull();
@@ -55,7 +55,7 @@ exports.up = async function(knex, Promise) {
   `);
 
   await knex.schema.createTable('posts', (table) => {
-    table.increments('id').notNull();
+    table.bigIncrements('id').notNull();
     table.integer('owner_id').notNull();
     table.string('title').notNull();
     table.text('body').notNull();
@@ -93,7 +93,7 @@ exports.up = async function(knex, Promise) {
   `);
 
   await knex.schema.createTable('comments', (table) => {
-    table.increments('id').notNull();
+    table.bigIncrements('id').notNull();
     table.integer('owner_id').notNull();
     table.integer('post_id').notNull();
     table.text('body').notNull();
