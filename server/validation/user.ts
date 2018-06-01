@@ -38,6 +38,10 @@ export class UserValidator extends Validator {
     });
   }
 
+  /**
+   * Checks an email and ensure it can fix in the database and is valid.
+   * @param email
+   */
   validateEmail(email: string): ValidationResult {
     const min = 6;
     const max = 190;
@@ -59,6 +63,10 @@ export class UserValidator extends Validator {
     return { result: true };
   }
 
+  /**
+   * Checks a name's length to ensure it fits in the database.
+   * @param fullName
+   */
   validateFullName(fullName: string): ValidationResult {
     const min = 4;
     const max = 190;
@@ -73,6 +81,11 @@ export class UserValidator extends Validator {
     return { result: true };
   }
 
+  /**
+   * Checks that a provided password won't take ages to hash (DoS prevention).
+   * http://permalink.gmane.org/gmane.comp.python.django.devel/39831
+   * @param password
+   */
   validatePassword(password: string): ValidationResult {
     const min = 8;
     const max = 4096;
