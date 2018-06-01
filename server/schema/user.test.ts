@@ -4,7 +4,7 @@ import { Hashids, Crypto } from '../utils';
 import { PostConnection } from './post';
 import { User } from './user';
 import { expect } from 'chai';
-import { getServer, graphqlQuery } from '../../test/test.bootstrap';
+import { getApp, graphqlQuery } from '../../test/test.bootstrap';
 
 // tslint:disable-next-line
 const GraphQLHashId = Hashids.getGraphQLHashId();
@@ -48,7 +48,7 @@ describe('user resource querying and mutations', () => {
     let jwt: any;
 
     it(`should register accounts`, async () => {
-      const app = await getServer();
+      const app = await getApp();
       const response = await graphqlQuery(app, `
         mutation {
           registerUser(input: {
@@ -90,7 +90,7 @@ describe('user resource querying and mutations', () => {
       expect(jwtString).to.exist;
       expect(jwt).to.exist;
 
-      const app = await getServer();
+      const app = await getApp();
       const response = await graphqlQuery(app, `
         query($userId: Hashid!) {
           user(id: $userId) {
@@ -118,7 +118,7 @@ describe('user resource querying and mutations', () => {
       expect(jwtString).to.exist;
       expect(jwt).to.exist;
 
-      const app = await getServer();
+      const app = await getApp();
       const response = await graphqlQuery(app, `
         query($userId: Hashid!) {
           user(id: $userId) {
@@ -139,16 +139,212 @@ describe('user resource querying and mutations', () => {
       expect(user.id.length).to.equal(12);
     });
 
-    // it(`should be able to mutate the user`, async () => {
-    //   expect(userId).to.exist;
-    //   expect(jwtString).to.exist;
-    //   expect(jwt).to.exist;
-    // });
+    it(`should be able to mutate the user`, async () => {
+      expect(userId).to.exist;
+      expect(jwtString).to.exist;
+      expect(jwt).to.exist;
 
-    // it(`should be able to deactivate the user`, async () => {
-    //   expect(userId).to.exist;
-    //   expect(jwtString).to.exist;
-    //   expect(jwt).to.exist;
-    // });
+      const app = await getApp();
+      const response = await graphqlQuery(app, `
+        mutation($userId: Hashid!) {
+          editUser(input: {
+            id: $userId
+            fullName: " sanic fast "
+          }) {
+            user {
+              id
+              fullName
+              email
+            }
+          }
+        }
+      `, { userId }, jwtString);
+
+      expect(response.body).to.not.have.property('errors');
+      expect(response.body.data).to.have.property('editUser');
+
+      const user = response.body.data.editUser.user;
+      expect(user.fullName).to.equal('Sanic Fast');
+      expect(user.email).to.equal('john.doe@example.com');
+      expect(user.id).to.be.a('string');
+      expect(user.id.length).to.equal(12);
+    });
+
+    it(`should not allow a password change when the old password is wrong`, async () => {
+      expect(userId).to.exist;
+      expect(jwtString).to.exist;
+      expect(jwt).to.exist;
+
+      const app = await getApp();
+
+      // This password change should fail as the old password provided is not
+      // currently on record.
+      const response = await graphqlQuery(app, `
+        mutation($userId: Hashid!) {
+          editUser(input: {
+            id: $userId
+            oldPassword: "iforgot"
+            newPassword: "lordofmemes"
+          }) {
+            user {
+              id
+              fullName
+              email
+            }
+          }
+        }
+      `, { userId }, jwtString);
+
+      expect(response.body).to.have.property('errors');
+      expect(response.body.errors.length).to.equal(1);
+    });
+
+    it(`should be able to change the password when the old one matches`, async () => {
+      expect(userId).to.exist;
+      expect(jwtString).to.exist;
+      expect(jwt).to.exist;
+
+      const app = await getApp();
+
+      // This should successfully change the password as the old one that's
+      // provided is the one currently on record.
+      const response = await graphqlQuery(app, `
+        mutation($userId: Hashid!) {
+          editUser(input: {
+            id: $userId
+            oldPassword: "p@$$w0rD"
+            newPassword: "thebestpasswordyouveeverseen"
+          }) {
+            user {
+              id
+              fullName
+              email
+            }
+          }
+        }
+      `, { userId }, jwtString);
+
+      expect(response.body).to.not.have.property('errors');
+      expect(response.body.data).to.have.property('editUser');
+
+      const user = response.body.data.editUser.user;
+      expect(user.fullName).to.equal('Sanic Fast');
+      expect(user.email).to.equal('john.doe@example.com');
+      expect(user.id).to.be.a('string');
+      expect(user.id.length).to.equal(12);
+    });
+
+    it(`should not allow changing the password if the client is not authorized`, async () => {
+      expect(userId).to.exist;
+      expect(jwtString).to.exist;
+      expect(jwt).to.exist;
+
+      const app = await getApp();
+
+      // Make sure only the owner can change a user's password.
+      const response = await graphqlQuery(app, `
+        mutation($userId: Hashid!) {
+          editUser(input: {
+            id: $userId
+            oldPassword: "thebestpasswordyouveeverseen"
+            newPassword: "thebestpasswordyouveeverseen"
+          }) {
+            user {
+              id
+              fullName
+              email
+            }
+          }
+        }
+      `, { userId });
+
+      expect(response.body).to.have.property('errors');
+      expect(response.body.errors.length).to.equal(1);
+    });
+
+    it(`should not be able to deactivate the user if not authorized`, async () => {
+      expect(userId).to.exist;
+      expect(jwtString).to.exist;
+      expect(jwt).to.exist;
+
+      const app = await getApp();
+
+      const response = await graphqlQuery(app, `
+        mutation($userId: Hashid!) {
+          deleteUser(input: {
+            id: $userId
+            password: "thebestpasswordyouveeverseen"
+          }) {
+            clientMutationId
+          }
+        }
+      `, { userId });
+
+      expect(response.body).to.have.property('errors');
+      expect(response.body.errors.length).to.equal(1);
+    });
+
+    it(`should not be able to deactivate the user if the password is wrong`, async () => {
+      expect(userId).to.exist;
+      expect(jwtString).to.exist;
+      expect(jwt).to.exist;
+
+      const app = await getApp();
+
+      const response = await graphqlQuery(app, `
+        mutation($userId: Hashid!) {
+          deleteUser(input: {
+            id: $userId
+            password: "uhhhhh"
+          }) {
+            clientMutationId
+          }
+        }
+      `, { userId }, jwtString);
+
+      expect(response.body).to.have.property('errors');
+      expect(response.body.errors.length).to.equal(1);
+    });
+
+    it(`should be able to deactivate the user`, async () => {
+      expect(userId).to.exist;
+      expect(jwtString).to.exist;
+      expect(jwt).to.exist;
+
+      const app = await getApp();
+
+      const response = await graphqlQuery(app, `
+        mutation($userId: Hashid!) {
+          deleteUser(input: {
+            id: $userId
+            password: "thebestpasswordyouveeverseen"
+          }) {
+            clientMutationId
+          }
+        }
+      `, { userId }, jwtString);
+
+      expect(response.body).to.not.have.property('errors');
+    });
+
+    it(`should not be able to query deactivated users`, async () => {
+      expect(userId).to.exist;
+      expect(jwtString).to.exist;
+      expect(jwt).to.exist;
+
+      const app = await getApp();
+
+      const response = await graphqlQuery(app, `
+        query($userId: Hashid!) {
+          user(id: $userId) {
+            id
+            fullName
+          }
+        }
+      `, { userId });
+
+      expect(response.body).to.not.have.property('errors');
+      expect(response.body.data.user).to.equal(null);
+    });
   });
 });

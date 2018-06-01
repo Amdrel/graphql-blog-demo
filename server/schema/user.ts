@@ -397,20 +397,11 @@ const EditUser = mutationWithClientMutationId({
       const user = userResults[0];
 
       // Verify that the old password passed matches the current password on
-      // record. This check is only done if the user editing the resource
-      // doesn't have the user edit permission (this means they're editing their
-      // own profile).
-      //
-      // Users with the edit permission will be able to reset other users'
-      // passwords at their discretion.
-      if (!granted) {
-        if (args.oldPassword != null || args.newPassword != null) {
-          const verified = await argon2.verify(user.password, args.oldPassword);
-          if (!verified) {
-            throw new ValidationError(getLocaleString('PasswordDoesntMatch', context));
-          }
-        } else {
-          throw new ValidationError(getLocaleString('PasswordRequired'));
+      // record. This check is only done if the password is being changed.
+      if (args.oldPassword != null || args.newPassword != null) {
+        const verified = await argon2.verify(user.password, args.oldPassword);
+        if (!verified) {
+          throw new ValidationError(getLocaleString('PasswordDoesntMatch', context));
         }
       }
 

@@ -21,7 +21,7 @@ interface GraphQLVariables {
  * first. This is more of a failsafe in-case that doesn't happen due to changes
  * in the mocha configuration.
  */
-export async function getServer(): Promise<Server> {
+export async function getApp(): Promise<Server> {
   const maxAttempts = 50;
   let attempts = 0;
 
